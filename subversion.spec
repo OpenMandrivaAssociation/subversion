@@ -23,7 +23,7 @@
 
 Name: subversion
 Version: 1.4.3
-Release: %mkrel 2
+Release: %mkrel 3
 Summary: A Concurrent Versioning System
 License: BSD CC2.0
 Group: Development/Other
@@ -324,7 +324,7 @@ subversion.  It's likely nobody will ever need these.
 
 %package -n	ruby-svn
 Summary:	Ruby bindings for Subversion
-Group: Development/Other
+Group: Development/Ruby
 BuildPreReq: ruby-devel
 Requires: ruby
 # soname didn't change between 1.3.x and 1.4.x, but we
@@ -338,7 +338,7 @@ library functions within ruby scripts.
 
 %package -n	ruby-svn-devel
 Summary:	Ruby bindings for Subversion, development libraries
-Group: Development/Other
+Group: Development/Ruby
 
 %description -n	ruby-svn-devel
 This package contains the .la files for the ruby bindings for
@@ -346,13 +346,14 @@ subversion.  It's likely nobody will ever need these.
 
 %files -n ruby-svn
 %defattr(-,root,root)
-%_libdir/ruby/site_ruby/*/*/*/*/*.so
-%_libdir/ruby/site_ruby/*/*/*.rb
+%ruby_sitearchdir/svn
+%exclude %ruby_sitearchdir/*/*/*.la
+%ruby_sitelibdir/*/*.rb
 %_libdir/libsvn_swig_ruby*.so.*
 
 %files -n ruby-svn-devel
 %defattr(-,root,root)
-%_libdir/ruby/site_ruby/*/*/*/*/*.la
+%ruby_sitearchdir/*/*/*.la
 %_libdir/libsvn_swig_ruby*.so
 
 %endif
@@ -561,9 +562,6 @@ if [ -x %{_bindir}/apu-1-config ]; then APU=%{_bindir}/apu-1-config; fi
 %if %{build_debug}
    --enable-maintainer-mode \
    --enable-debug \
-%endif
-%if %{build_ruby}
-   --with-ruby-sitedir=%_libdir/ruby/site_ruby \
 %endif
 %if %{build_java}
    --with-jdk=%{jdk_path} \
