@@ -463,7 +463,8 @@ Summary:	Subversion server DSO module for apache
 Group:		System/Servers
 Epoch:		1
 Requires: %name-tools = %version-%{release}
-Requires(pre,postun): rpm-helper
+Requires(pre): rpm-helper
+Requires(postun): rpm-helper
 Requires(pre):	apache-conf >= %{apache_version}
 Requires(pre):	apache >= %{apache_version}
 Requires(pre):	apache-mod_dav >= %{apache_version}
