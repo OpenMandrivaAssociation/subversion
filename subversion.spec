@@ -9,7 +9,7 @@
 %define build_ruby 1
 %{?_without_ruby: %{expand: %%global build_ruby 0}}
 
-%define build_java 0
+%define build_java 1
 %{?_with_java: %{expand: %%global build_java 1}}
 
 %define build_perl 1
@@ -23,7 +23,7 @@
 
 Name: subversion
 Version: 1.4.3
-Release: %mkrel 3
+Release: %mkrel 4
 Summary: A Concurrent Versioning System
 License: BSD CC2.0
 Group: Development/Other
@@ -186,7 +186,8 @@ Subversion common libraries
 Summary:	Subversion Server
 Group:		System/Servers
 Requires: %name = %version-%{release}
-Requires(pre,postun): rpm-helper
+Requires(pre):  rpm-helper
+Requires(postun): rpm-helper
 Requires(post): sed
 Requires: xinetd
 # soname didn't change between 1.3.x and 1.4.x, but we
@@ -325,7 +326,7 @@ subversion.  It's likely nobody will ever need these.
 %package -n	ruby-svn
 Summary:	Ruby bindings for Subversion
 Group: Development/Ruby
-BuildPreReq: ruby-devel
+BuildRequires: ruby-devel
 Requires: ruby
 # soname didn't change between 1.3.x and 1.4.x, but we
 # need the right one...
@@ -365,9 +366,7 @@ subversion.  It's likely nobody will ever need these.
 %package -n	java-svn
 Summary:	java bindings for Subversion
 Group:		Development/Other
-BuildPreReq: java-1.4.2-gcj-compat
-BuildPreReq: java-1.4.2-gcj-compat-devel
-Requires:	java
+BuildRequires:  java-1.4.2-gcj-compat-devel
 Provides:	java-subversion = %version-%{release}
 Requires:	%name = %version-%{release}
 # soname didn't change between 1.3.x and 1.4.x, but we
@@ -392,7 +391,7 @@ library functions within java scripts.
 %package -n perl-SVN
 Summary:	Perl bindings for Subversion
 Group:		Development/Perl
-BuildPreReq: perl-devel
+BuildRequires: perl-devel
 Requires:	%name = %version-%{release}
 Obsoletes:	perl-svn
 Provides:	perl-svn = %version-%{release}
