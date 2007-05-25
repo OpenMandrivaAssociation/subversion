@@ -340,6 +340,7 @@ library functions within ruby scripts.
 %package -n	ruby-svn-devel
 Summary:	Ruby bindings for Subversion, development libraries
 Group: Development/Ruby
+Requires:       ruby-svn = %version-%{release}
 
 %description -n	ruby-svn-devel
 This package contains the .la files for the ruby bindings for
