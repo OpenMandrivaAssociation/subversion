@@ -364,7 +364,7 @@ subversion.  It's likely nobody will ever need these.
 %if %{build_java}
 
 %package -n	java-svn
-Summary:	java bindings for Subversion
+Summary:	Java bindings for Subversion
 Group:		Development/Other
 BuildRequires:  java-1.4.2-gcj-compat-devel
 Provides:	java-subversion = %version-%{release}
@@ -713,6 +713,14 @@ install -m644 notes/logo/256-colour/subversion_logo_hor-237x32.png %buildroot/va
 
 # fix a missing file...
 ln -sf libsvn_diff-1.so.0.0.0 %buildroot%_libdir/libsvn_diff.so
+
+%{_bindir}/chrpath -d %{buildroot}%{_bindir}/svn
+%{_bindir}/chrpath -d %{buildroot}%{_bindir}/svnlook
+%{_bindir}/chrpath -d %{buildroot}%{_bindir}/svnversion
+%{_bindir}/chrpath -d %{buildroot}%{_bindir}/svnserve
+%{_bindir}/chrpath -d %{buildroot}%{_bindir}/svnadmin
+%{_bindir}/chrpath -d %{buildroot}%{_bindir}/svndumpfilter
+%{_bindir}/chrpath -d %{buildroot}%{_bindir}/svnsync
 
 # fix the stupid rpath stuff...
 find %buildroot%{perl_vendorarch} -type f -name "*.so" | xargs chrpath -d
