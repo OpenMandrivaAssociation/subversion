@@ -1,7 +1,5 @@
 %define apache_version 2.0.54
 %define libsvn %mklibname svn 0
-%define jdk_path %{_prefix}/lib/jvm/java-1.4.2-gcj
-%define java_includes %_includedir/libgcj
 
 %define build_python 1
 %{?_without_python: %{expand: %%global build_python 0}}
@@ -11,6 +9,7 @@
 
 %define build_java 1
 %{?_with_java: %{expand: %%global build_java 1}}
+%define gcj_support 1
 
 %define build_perl 1
 %{?_without_perl: %{expand: %%global build_perl 0}}
@@ -23,7 +22,7 @@
 
 Name: subversion
 Version: 1.4.3
-Release: %mkrel 4
+Release: %mkrel 5
 Summary: A Concurrent Versioning System
 License: BSD CC2.0
 Group: Development/Other
@@ -363,26 +362,65 @@ subversion.  It's likely nobody will ever need these.
 #--------------------------------------------------------------------------
 
 %if %{build_java}
-
-%package -n	java-svn
+%package -n svn-javahl
+Epoch:          0
 Summary:	Java bindings for Subversion
-Group:		Development/Other
-BuildRequires:  java-1.4.2-gcj-compat-devel
-Provides:	java-subversion = %version-%{release}
-Requires:	%name = %version-%{release}
+Group:		Development/Java
+Obsoletes:      java-svn < %{epoch}:%{version}-%{release}
+Provides:       java-svn = %{epoch}:%{version}-%{release}
+Provides:	java-subversion = %{epoch}:%{version}-%{release}
+Requires:	%{name} = %{version}-%{release}
 # soname didn't change between 1.3.x and 1.4.x, but we
-# need the right one...
-Requires: %{libsvn} = %{version}
+# need the right one
+Requires:       %{libsvn} = %{version}-%{release}
+%if %{gcj_support}
+Requires(post): java-gcj-compat
+Requires(postun): java-gcj-compat
+BuildRequires: java-gcj-compat-devel
+%else
+BuildRequires:  java-devel
+BuildArch:      noarch
+%endif
+BuildRequires:  ant
+BuildRequires:  jpackage-utils
+BuildRequires:  junit
 
-%description -n	java-svn
+%description -n	svn-javahl
 This package contains the files necessary to use the subversion
-library functions within java scripts.
+library functions from Java.
 
-%files -n java-svn
-%defattr(-,root,root)
-%_libdir/libsvnjavahl-1.*
-%_libdir/svn-javahl
+%package -n svn-javahl-javadoc
+Epoch:          0
+Summary:        Javadoc for svn-javahl
+Group:          Development/Java
+Provides:       %{version}-%{release}
 
+%description -n svn-javahl-javadoc
+Javadoc for svn-javahl.
+
+%if %{gcj_support}
+%post -n svn-javahl
+%{update_gcjdb}
+
+%postun -n svn-javahl
+%{clean_gcjdb}
+%endif
+
+%files -n svn-javahl
+%defattr(0644,root,root,0755)
+%doc subversion/bindings/java/README
+%{_jnidir}/svn-javahl.jar
+%{_jnidir}/svn-javahl-%{version}.jar
+%attr(0755,root,root) %{_libdir}/libsvnjavahl-1.so
+%if %{gcj_support}
+%dir %{_libdir}/gcj/svn-javahl
+%attr(-,root,root) %{_libdir}/gcj/svn-javahl/*
+%endif
+
+%files -n svn-javahl-javadoc
+%defattr(0644,root,root,0755)
+%doc %{_javadocdir}/svn-javahl-%{version}
+%doc %{_javadocdir}/svn-javahl
 %endif
 
 #--------------------------------------------------------------------------
@@ -523,6 +561,12 @@ fi
 %patch3 -p0 -b .neon
 rm -rf neon apr apr-util db4
 
+%if %{build_java}
+%{__perl} -pi -e 's|^LINK_JAVAHL_CXX =(.*)|LINK_JAVAHL_CXX =\1 -avoid-version|;' \
+              -e 's|^javahl_javadir =.*|javahl_javadir = %{_jnidir}|;' \
+  Makefile.in
+%endif
+
 # fix shellbang lines, #111498
 perl -pi -e 's|/usr/bin/env perl -w|/usr/bin/perl -w|' tools/hook-scripts/*.pl.in
 
@@ -535,9 +579,7 @@ mv svn-book-html-chunk svnbook-1.3
 %build
 ./autogen.sh
 
-export CFLAGS="-fPIC -I%{java_includes}"
-export CXXFLAGS="-fPIC -I%{java_includes}"
-# override weird -shrext from ruby ( from Fedora )
+# override weird -shrext from ruby (from Fedora)
 export svn_cv_ruby_link="%{__cc} -shared"
 
 # both versions could be installed, use the latest one per default
@@ -565,14 +607,15 @@ if [ -x %{_bindir}/apu-1-config ]; then APU=%{_bindir}/apu-1-config; fi
    --enable-debug \
 %endif
 %if %{build_java}
-   --with-jdk=%{jdk_path} \
+   --with-jdk=%{java_home} \
+   --with-junit=%{_javadir}/junit.jar \
 %endif
    --enable-shared 
 
 # put the apache modules in the correct place
 perl -pi -e "s|%_libdir/apache|%_libdir/apache-extramodules|g" Makefile subversion/mod_authz_svn/*la subversion/mod_dav_svn/*la
 
-%make all
+%{make} all
 
 %if %{build_python}
 make swig-py swig_pydir=%{py_platsitedir}/libsvn swig_pydir_extra=%{py_sitedir}/svn
@@ -587,7 +630,8 @@ make swig-rb
 %endif
 
 %if %{build_java}
-make javahl
+%{make} javahl
+(cd subversion/bindings/java/javahl/build && %{ant} javadoc)
 %endif
 
 %install
@@ -626,7 +670,20 @@ make LC_ALL=C LANG=C LD_LIBRARY_PATH="`pwd`/subversion/bindings/swig/perl/libsvn
 %makeinstall_std install-swig-rb
 %endif
 %if %{build_java}
-%makeinstall_std install-javahl
+%{makeinstall_std} install-javahl
+
+%{__mv} %{buildroot}%{_jnidir}/svn-javahl.jar %{buildroot}%{_jnidir}/svn-javahl-%{version}.jar
+%{__ln_s} svn-javahl-%{version}.jar %{buildroot}%{_jnidir}/svn-javahl.jar
+
+%{__mkdir_p} %{buildroot}%{_javadocdir}/svn-javahl-%{version}
+%{__cp} -a subversion/bindings/java/javahl/javadoc/* %{buildroot}%{_javadocdir}/svn-javahl-%{version}
+%{__ln_s} svn-javahl-%{version} %{buildroot}%{_javadocdir}/svn-javahl
+
+%{_bindir}/chrpath -d %{buildroot}%{_libdir}/libsvnjavahl-1.so
+
+%if %{gcj_support}
+RPM_PACKAGE_NAME=svn-javahl %{_bindir}/aot-compile-rpm
+%endif
 %endif
 
 %if %{build_perl}
@@ -754,6 +811,14 @@ find %buildroot -name "perllocal.pod" | xargs rm -f
 
 # fix libtool files perms
 chmod 644 %buildroot%_libdir/*.la
+
+%if %{build_java}
+%if 0
+%check
+export CLASSPATH=$(%{_bindir}/build-classpath junit):%{buildroot}%{_jnidir}/svn-javahl.jar:`pwd`/subversion/bindings/java/javahl/src
+%{java} -Djava.library.path=%{buildroot}%{_libdir} org.tigris.subversion.javahl.tests.BasicTests
+%endif
+%endif
 
 %clean
 rm -rf %buildroot
