@@ -21,7 +21,7 @@
 %{?_with_debug: %{expand: %%global build_debug 1}}
 
 Name: subversion
-Version: 1.4.3
+Version: 1.4.4
 Release: %mkrel 5
 Summary: A Concurrent Versioning System
 License: BSD CC2.0
