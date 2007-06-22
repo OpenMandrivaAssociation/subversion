@@ -22,7 +22,7 @@
 
 Name: subversion
 Version: 1.4.4
-Release: %mkrel 5
+Release: %mkrel 6
 Summary: A Concurrent Versioning System
 License: BSD CC2.0
 Group: Development/Other
@@ -577,6 +577,7 @@ chmod 644 BUGS CHANGES COMMITTERS COPYING HACKING INSTALL README
 mv svn-book-html-chunk svnbook-1.3
 
 %build
+%serverbuild
 ./autogen.sh
 
 # override weird -shrext from ruby (from Fedora)
