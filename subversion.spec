@@ -34,7 +34,7 @@ Source3: %mod_authz_conf
 Source4: %name.bash-completion
 Source5: %name-1.3.0-global-config
 Source6: %name-1.3.0-global-servers
-Source7: svn-book-html-chunk.tar.bz2
+Source7: http://svnbook.red-bean.com/nightly/en/svn-book-html-chunk.tar.bz2
 Patch0: subversion-1.1.3-java.patch
 Patch2: subversion-1.3.0-rc6-swig-perl.patch
 Patch3: subversion-latest_neon.diff
