@@ -38,6 +38,9 @@ Source7: http://svnbook.red-bean.com/nightly/en/svn-book-html-chunk.tar.bz2
 Patch0: subversion-1.1.3-java.patch
 Patch2: subversion-1.3.0-rc6-swig-perl.patch
 Patch3: subversion-latest_neon.diff
+# http://www.rz.uni-karlsruhe.de/~rz41/source/Patches/subversion-1.4.3/hook-scripts-patch
+Patch4: subversion-hook-script_pathfix.diff
+Patch5: subversion-propchange-email.diff
 BuildRequires:	autoconf >= 2.54
 BuildRequires:	libtool >= 1.4.2
 BuildRequires:	chrpath
@@ -510,8 +513,6 @@ Requires(pre):	apache-mod_dav >= %{apache_version}
 # soname didn't change between 1.3.x and 1.4.x, but we
 # need the right one...
 Requires(pre): %{libsvn} = %{version}
-Provides:	apache2-%{mod_dav_name} = %{mod_version}
-Obsoletes:	apache2-mod_dav_svn
 Obsoletes:	apache-mod_authz_svn
 
 %description -n apache-mod_dav_svn
@@ -550,6 +551,43 @@ fi
 %attr(0755,root,root) %_libdir/apache-extramodules/%{mod_authz_so}
 %attr(0644,root,root) %{_var}/www/icons/subversion.png
 
+%package -n	apache-mod_dontdothat
+Summary:	An Apache module that allows you to block specific types of Subversion requests
+Group:		System/Servers
+Epoch:		0
+Requires(pre): rpm-helper
+Requires(postun): rpm-helper
+Requires(pre):	apache-conf >= %{apache_version}
+Requires(pre):	apache >= %{apache_version}
+Requires(pre):	apache-mod_dav_svn = 1:%{version}
+
+%description -n apache-mod_dontdothat
+mod_dontdothat is an Apache module that allows you to block specific types
+of Subversion requests.  Specifically, it's designed to keep users from doing
+things that are particularly hard on the server, like checking out the root
+of the tree, or the tags or branches directories.  It works by sticking an
+input filter in front of all REPORT requests and looking for dangerous types
+of requests.  If it finds any, it returns a 403 Forbidden error.
+
+%post -n apache-mod_dontdothat
+if [ -f %{_var}/lock/subsys/httpd ]; then
+    %{_initrddir}/httpd restart 1>&2;
+fi
+
+%postun -n apache-mod_dontdothat
+if [ "$1" = "0" ]; then
+    if [ -f %{_var}/lock/subsys/httpd ]; then
+	%{_initrddir}/httpd restart 1>&2
+    fi
+fi
+
+%files -n apache-mod_dontdothat
+%defattr(-,root,root)
+%doc contrib/server-side/mod_dontdothat/README
+%attr(0644,root,root) %config(noreplace) %{_sysconfdir}/httpd/modules.d/48_mod_dontdothat.conf
+%attr(0644,root,root) %config(noreplace) %{_sysconfdir}/httpd/conf/dontdothat.conf
+%attr(0755,root,root) %{_libdir}/apache-extramodules/mod_dontdothat.so
+
 #--------------------------------------------------------------------------
 
 %prep
@@ -559,6 +597,11 @@ fi
 %endif
 %patch2 -p1 -b .perlswig
 %patch3 -p0 -b .neon
+%patch4 -p0 -b .hook-script_pathfix
+
+# it was removed after 1.3.2 but still referenced in subversion/libsvn_repos/repos.c
+%patch5 -p1 -b .propchange-email
+
 rm -rf neon apr apr-util db4
 
 %if %{build_java}
@@ -635,6 +678,14 @@ make swig-rb
 (cd subversion/bindings/java/javahl/build && %{ant} javadoc)
 %endif
 
+# compile the extra module as well...
+%{_sbindir}/apxs -c -Isubversion/include -Isubversion \
+    contrib/server-side/mod_dontdothat/mod_dontdothat.c \
+    subversion/libsvn_subr/libsvn_subr-1.la
+
+# put the apache modules in the correct place
+perl -pi -e "s|%_libdir/apache|%_libdir/apache-extramodules|g" contrib/server-side/mod_dontdothat/mod_dontdothat.la
+
 %install
 rm -rf %buildroot
 
@@ -695,6 +746,43 @@ make pure_vendor_install -C subversion/bindings/swig/perl/native DESTDIR=%buildr
 install -d %buildroot%_sysconfdir/httpd/modules.d
 cat %{SOURCE2} > %buildroot%_sysconfdir/httpd/modules.d/%{mod_dav_conf}
 cat %{SOURCE3} > %buildroot%_sysconfdir/httpd/modules.d/%{mod_authz_conf}
+
+# install the extra module
+libtool --mode=install cp contrib/server-side/mod_dontdothat/mod_dontdothat.la %{buildroot}%{_libdir}/apache-extramodules/
+
+# cleanup
+rm -f %{buildroot}%{_libdir}/apache-extramodules/mod_dontdothat.*a
+
+cat > %{buildroot}%{_sysconfdir}/httpd/modules.d/48_mod_dontdothat.conf << EOF
+<IfDefine HAVE_DONTDOTHAT>
+    <IfModule !mod_dontdothat.c>
+	LoadModule dontdothat_module    extramodules/mod_dontdothat.so
+    </IfModule>
+</IfDefine>
+
+<IfModule mod_dontdothat.c>
+
+    <Location /svn>
+        DAV svn
+        SVNParentPath %{_localstatedir}/svn/repositories
+        DontDoThatConfigFile %{_sysconfdir}/httpd/conf/dontdothat.conf
+    </Location>
+
+</IfModule>
+EOF
+
+install -d %{buildroot}%{_sysconfdir}/httpd/conf
+cat > %{buildroot}%{_sysconfdir}/httpd/conf/dontdothat.conf << EOF
+[recursive-actions]
+/*/trunk = allow
+/ = deny
+/* = deny
+/*/tags = deny
+/*/branches = deny
+/*/* = deny
+/*/*/tags = deny
+/*/*/branches = deny
+EOF
 
 ######################
 ###  client-tools  ###
@@ -823,5 +911,3 @@ export CLASSPATH=$(%{_bindir}/build-classpath junit):%{buildroot}%{_jnidir}/svn-
 
 %clean
 rm -rf %buildroot
-
-
