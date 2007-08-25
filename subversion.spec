@@ -22,7 +22,7 @@
 
 Name: subversion
 Version: 1.4.4
-Release: %mkrel 6
+Release: %mkrel 7
 Summary: A Concurrent Versioning System
 License: BSD CC2.0
 Group: Development/Other
@@ -145,7 +145,7 @@ This package contains the subversion book and design info files.
 
 %files doc
 %defattr(0644,root,root,755)
-%doc svnbook-1.3
+%doc svnbook-1.4
 %doc doc/user/*.html
 %doc doc/user/*.txt
 
@@ -574,7 +574,7 @@ perl -pi -e 's|/usr/bin/env perl -w|/usr/bin/perl -w|' tools/hook-scripts/*.pl.i
 chmod 644 BUGS CHANGES COMMITTERS COPYING HACKING INSTALL README
 
 # move latest svnbook snapshot as their target version
-mv svn-book-html-chunk svnbook-1.3
+mv svn-book-html-chunk svnbook-1.4
 
 %build
 %serverbuild
