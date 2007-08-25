@@ -611,7 +611,7 @@ rm -rf neon apr apr-util db4
 %endif
 
 # fix shellbang lines, #111498
-perl -pi -e 's|/usr/bin/env perl -w|/usr/bin/perl -w|' tools/hook-scripts/*.pl.in
+perl -pi -e 's|/usr/bin/env perl|%{_bindir}/perl|g' tools/hook-scripts/*.pl.in
 
 # fix file perms
 chmod 644 BUGS CHANGES COMMITTERS COPYING HACKING INSTALL README
