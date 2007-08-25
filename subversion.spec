@@ -841,6 +841,7 @@ install -m 755 svnperms.py %buildroot/%_datadir/%name-%version/repo-tools/hook-s
 install -m 755 mailer/mailer.py %buildroot/%_datadir/%name-%version/repo-tools/hook-scripts
 install -m 644 mailer/mailer.conf.example %buildroot/%_datadir/%name-%version/repo-tools/hook-scripts
 install -m 644 README %buildroot/%_datadir/%name-%version/repo-tools/hook-scripts
+install -m 755 propchange-email.pl %buildroot/%_datadir/%name-%version/repo-tools/hook-scripts
 popd
 
 #xslt
