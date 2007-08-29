@@ -21,14 +21,13 @@
 %{?_with_debug: %{expand: %%global build_debug 1}}
 
 Name: subversion
-Version: 1.4.4
-Release: %mkrel 7
+Version: 1.4.5
+Release: %mkrel 1
 Summary: A Concurrent Versioning System
 License: BSD CC2.0
 Group: Development/Other
 URL: http://subversion.tigris.org
 Source0: http://subversion.tigris.org/tarballs/%name-%version.tar.bz2
-Source1: http://subversion.tigris.org/downloads/%name-%version.tar.bz2.asc
 Source2: %mod_dav_conf
 Source3: %mod_authz_conf
 Source4: %name.bash-completion
