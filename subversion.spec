@@ -22,7 +22,7 @@
 
 Name: subversion
 Version: 1.4.5
-Release: %mkrel 1
+Release: %mkrel 2
 Summary: A Concurrent Versioning System
 License: BSD CC2.0
 Group: Development/Other
@@ -376,8 +376,6 @@ Requires:	%{name} = %{version}-%{release}
 # need the right one
 Requires:       %{libsvn} = %{version}-%{release}
 %if %{gcj_support}
-Requires(post): java-gcj-compat
-Requires(postun): java-gcj-compat
 BuildRequires: java-gcj-compat-devel
 %else
 BuildRequires:  java-devel
