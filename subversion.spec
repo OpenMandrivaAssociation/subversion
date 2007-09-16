@@ -22,7 +22,7 @@
 
 Name: subversion
 Version: 1.4.5
-Release: %mkrel 2
+Release: %mkrel 3
 Summary: A Concurrent Versioning System
 License: BSD CC2.0
 Group: Development/Other
@@ -301,7 +301,6 @@ library functions within python scripts.
 %{py_sitedir}/svn
 %{py_platsitedir}/libsvn
 %doc tools/examples/*.py subversion/bindings/swig/INSTALL subversion/bindings/swig/NOTES
-
 
 %package -n	python-svn-devel
 Summary:	Python bindings for Subversion, development files
@@ -602,7 +601,7 @@ fi
 rm -rf neon apr apr-util db4
 
 %if %{build_java}
-%{__perl} -pi -e 's|^LINK_JAVAHL_CXX =(.*)|LINK_JAVAHL_CXX =\1 -avoid-version|;' \
+%{__perl} -pi -e 's|^LINK_JAVAHL_CXX =(.*)|LINK_JAVAHL_CXX =\1 -module -avoid-version|;' \
               -e 's|^javahl_javadir =.*|javahl_javadir = %{_jnidir}|;' \
   Makefile.in
 %endif
