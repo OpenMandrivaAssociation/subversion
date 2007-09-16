@@ -20,9 +20,28 @@
 %define build_debug 0
 %{?_with_debug: %{expand: %%global build_debug 1}}
 
+%if %mdkversion <= 200700
+%define build_java 0
+%define gcj_support 0
+
+# play safe work around (misc)
+%define py_purelibdir %{py_libdir}
+%define py_platlibdir %{py_libdir}
+%define py_platsitedir %{py_sitedir}
+
+# rpm macros for use in ruby packages
+%define ruby_version %(ruby -rrbconfig -e 'print Config::CONFIG["ruby_version"]')
+%define ruby_archdir %(ruby -rrbconfig -e 'puts Config::CONFIG["archdir"]')
+%define ruby_libdir %(ruby -rrbconfig -e 'print Config::CONFIG["rubylibdir"]')
+%define ruby_sitearchdir %(ruby -rrbconfig -e 'puts Config::CONFIG["sitearchdir"]')
+%define ruby_sitelibdir %(ruby -rrbconfig -e 'puts Config::CONFIG["sitelibdir"]')
+%define ruby_gemdir %(ruby -rrbconfig -e 'include Config; print CONFIG["rubylibdir"].sub(CONFIG["ruby_version"], "gems/#{CONFIG["ruby_version"]}")')
+%define ruby_ridir %(ruby -rrbconfig -e 'include Config; print File.join(CONFIG["datadir"], "ri", CONFIG["ruby_version"])')
+%endif
+
 Name: subversion
 Version: 1.4.5
-Release: %mkrel 3
+Release: %mkrel 4
 Summary: A Concurrent Versioning System
 License: BSD CC2.0
 Group: Development/Other
@@ -381,7 +400,7 @@ BuildRequires:  java-devel
 BuildArch:      noarch
 %endif
 BuildRequires:  ant
-BuildRequires:  jpackage-utils
+BuildRequires:  jpackage-utils >= 1.7.3-10
 BuildRequires:  junit
 
 %description -n	svn-javahl
