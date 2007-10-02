@@ -33,7 +33,7 @@
 
 Name: subversion
 Version: 1.4.5
-Release: %mkrel 4
+Release: %mkrel 5
 Summary: A Concurrent Versioning System
 License: BSD CC2.0
 Group: Development/Other
@@ -403,7 +403,8 @@ library functions from Java.
 Epoch:          0
 Summary:        Javadoc for svn-javahl
 Group:          Development/Java
-Provides:       %{version}-%{release}
+Provides:       java-subversion-doc = %{epoch}:%{version}-%{release}
+Provides:	java-svn-doc = %{epoch}:%{version}-%{release}
 
 %description -n svn-javahl-javadoc
 Javadoc for svn-javahl.
