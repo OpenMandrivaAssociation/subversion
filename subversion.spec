@@ -33,7 +33,7 @@
 
 Name: subversion
 Version: 1.4.5
-Release: %mkrel 5
+Release: %mkrel 6
 Summary: A Concurrent Versioning System
 License: BSD CC2.0
 Group: Development/Other
@@ -392,7 +392,7 @@ BuildRequires:  java-devel
 BuildArch:      noarch
 %endif
 BuildRequires:  ant
-BuildRequires:  jpackage-utils >= 1.7.3-10
+BuildRequires:  java-rpmbuild >= 1.7.3-10
 BuildRequires:  junit
 
 %description -n	svn-javahl
