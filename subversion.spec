@@ -94,7 +94,6 @@ Provides: %name-client-tools = %version-%{release}
 # soname didn't change between 1.3.x and 1.4.x, but we
 # need the right one...
 Requires: %{libsvn} = %{version}
-BuildRoot: %{_tmppath}/%name-%version
 
 %description
 Subversion is a concurrent version control system which enables one or more
