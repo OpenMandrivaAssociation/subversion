@@ -32,8 +32,8 @@
 %endif
 
 Name: subversion
-Version: 1.4.5
-Release: %mkrel 6
+Version: 1.4.6
+Release: %mkrel 1
 Summary: A Concurrent Versioning System
 License: BSD CC2.0
 Group: Development/Other
@@ -94,6 +94,7 @@ Provides: %name-client-tools = %version-%{release}
 # soname didn't change between 1.3.x and 1.4.x, but we
 # need the right one...
 Requires: %{libsvn} = %{version}
+Buildroot:	%{_tmppath}/%{name}-%{version}-%{release}-root
 
 %description
 Subversion is a concurrent version control system which enables one or more
@@ -391,7 +392,11 @@ BuildRequires:  java-devel
 BuildArch:      noarch
 %endif
 BuildRequires:  ant
+%if %mdkversion >= 200810
 BuildRequires:  java-rpmbuild >= 1.7.3-10
+%else
+BuildRequires:  jpackage-utils >= 1.7.3-10
+%endif
 BuildRequires:  junit
 
 %description -n	svn-javahl
