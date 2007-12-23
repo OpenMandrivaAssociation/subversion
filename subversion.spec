@@ -61,7 +61,7 @@ BuildRequires:	db4-devel
 %if %{mdkversion} < 200610
 BuildRequires:	neon-devel >= 0.24.7
 %else
-BuildRequires:	neon-devel >= 0.26
+BuildRequires:	neon0.26-devel >= 0.26.4
 %endif
 BuildRequires:	apache-devel >=  %{apache_version}
 BuildRequires:	apr-devel >= 1.2.2
