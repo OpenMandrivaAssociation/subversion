@@ -1,4 +1,4 @@
-%define _requires_exceptions devel(libneon)
+%define _requires_exceptions devel(libneon
 
 %define apache_version 2.0.54
 %define libsvn %mklibname svn 0
@@ -35,7 +35,7 @@
 
 Name: subversion
 Version: 1.4.6
-Release: %mkrel 2
+Release: %mkrel 3
 Summary: A Concurrent Versioning System
 License: BSD CC2.0
 Group: Development/Other
