@@ -1,3 +1,5 @@
+%define _requires_exceptions devel(libneon)
+
 %define apache_version 2.0.54
 %define libsvn %mklibname svn 0
 
@@ -33,7 +35,7 @@
 
 Name: subversion
 Version: 1.4.6
-Release: %mkrel 1
+Release: %mkrel 2
 Summary: A Concurrent Versioning System
 License: BSD CC2.0
 Group: Development/Other
@@ -490,6 +492,11 @@ Provides:	%{_lib}svn-devel = %version-%{release}
 Obsoletes:	libsubversion1_0-devel < 1.2.3-4mdk
 Obsoletes:	libsubversion1_0-static-devel < 1.2.3-4mdk
 Requires: %libsvn = %version-%release
+%if %{mdkversion} < 200610
+Requires:	neon-devel >= 0.24.7
+%else
+Requires:	neon0.26-devel >= 0.26.4
+%endif
 
 %description devel
 This package contains the header files and linker scripts for
