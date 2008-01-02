@@ -207,6 +207,7 @@ Requires: xinetd
 # soname didn't change between 1.3.x and 1.4.x, but we
 # need the right one...
 Requires: %{libsvn} = %{version}
+BuildRoot: %{_tmppath}/%name-%version
 
 %description server
 This package contains a myriad of server for subversion server
