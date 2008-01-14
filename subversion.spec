@@ -35,7 +35,7 @@
 
 Name: subversion
 Version: 1.4.6
-Release: %mkrel 4
+Release: %mkrel 5
 Summary: A Concurrent Versioning System
 License: BSD CC2.0
 Group: Development/Other
