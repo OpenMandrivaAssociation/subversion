@@ -222,7 +222,7 @@ project.  It has not released its own package yet, but you can
 find it at http://cvs2svn.tigris.org/
 
 %pre server
-%_pre_useradd svn %{_localstatedir}/svn /bin/false
+%_pre_useradd svn %{_localstatedir}/lib/svn /bin/false
 
 %post server
 # Libraries for REPOS ( Repository ) and FS ( filesystem backends ) are in
@@ -253,7 +253,7 @@ service xinetd condrestart
 %_bindir/svnserve
 %_bindir/server-vsn*
 %config(noreplace) %_sysconfdir/xinetd.d/svnserve
-%attr(0770,svn,svn) %{_localstatedir}/svn
+%attr(0770,svn,svn) %{_localstatedir}/lib/svn
 %_mandir/man8/svnserve.8*
 %_mandir/man5/svnserve.conf.5*
 
@@ -658,7 +658,7 @@ if [ -x %{_bindir}/apu-1-config ]; then APU=%{_bindir}/apu-1-config; fi
    --sysconfdir=%_sysconfdir \
    --datadir=%_datadir \
    --libdir=%_libdir \
-   --localstatedir=%{_localstatedir} \
+   --localstatedir=%{_localstatedir}/lib \
    --mandir=%_mandir \
    --with-apxs=%{_sbindir}/apxs \
    --with-apr=$APR \
@@ -784,7 +784,7 @@ cat > %{buildroot}%{_sysconfdir}/httpd/modules.d/48_mod_dontdothat.conf << EOF
 
     <Location /svn>
         DAV svn
-        SVNParentPath %{_localstatedir}/svn/repositories
+        SVNParentPath %{_localstatedir}/lib/svn/repositories
         DontDoThatConfigFile %{_sysconfdir}/httpd/conf/dontdothat.conf
     </Location>
 
@@ -910,11 +910,11 @@ service svnserve
     wait		= no
     user		= svn
     server		= %_bindir/svnserve
-    server_args		= -i -r %_localstatedir/svn/repositories
+    server_args		= -i -r %_localstatedir/lib/svn/repositories
 }
 EOF
 install -m 644 svnserve.xinetd %buildroot%_sysconfdir/xinetd.d/svnserve
-install -d %buildroot%{_localstatedir}/svn/repositories
+install -d %buildroot%{_localstatedir}/lib/svn/repositories
 
 # cleanup
 find %buildroot -name "perllocal.pod" | xargs rm -f
