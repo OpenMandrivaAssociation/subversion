@@ -35,7 +35,7 @@
 
 Name: subversion
 Version: 1.4.6
-Release: %mkrel 5
+Release: %mkrel 6
 Summary: A Concurrent Versioning System
 License: BSD CC2.0
 Group: Development/Other
@@ -66,7 +66,7 @@ BuildRequires:	neon-devel >= 0.24.7
 BuildRequires:	neon0.26-devel >= 0.26.4
 %endif
 BuildRequires:	apache-devel >=  %{apache_version}
-BuildRequires:	apr-devel >= 1.2.2
+BuildRequires:	apr-devel >= 1:1.2.2
 BuildRequires:	apr-util-devel >= 1.2.2
 BuildRequires:	libxslt-proc
 BuildRequires:	docbook-style-xsl
@@ -96,7 +96,7 @@ Provides: %name-client-tools = %version-%{release}
 # soname didn't change between 1.3.x and 1.4.x, but we
 # need the right one...
 Requires: %{libsvn} = %{version}
-Buildroot:	%{_tmppath}/%{name}-%{version}-%{release}-root
+Buildroot:	%{_tmppath}/%{name}-%{version}-%{release}-buildroot
 
 %description
 Subversion is a concurrent version control system which enables one or more
