@@ -174,8 +174,12 @@ Conflicts:	subversion < 1.3.0-2mdk
 %description -n %libsvn
 Subversion common libraries
 
+%if %mdkversion < 200900
 %post -n %libsvn -p /sbin/ldconfig
+%endif
+%if %mdkversion < 200900
 %postun -n %libsvn -p /sbin/ldconfig
+%endif
 
 %files -n %libsvn
 %defattr(-,root,root)
@@ -227,7 +231,9 @@ find it at http://cvs2svn.tigris.org/
 %post server
 # Libraries for REPOS ( Repository ) and FS ( filesystem backends ) are in
 # server now, so we need a ldconfig
+%if %mdkversion < 200900
 /sbin/ldconfig
+%endif
 # fix svn entries in /etc/services
 if ! grep -qE '^svn[[:space:]]+3690/(tcp|udp)[[:space:]]+svnserve' %{_sysconfdir}/services; then
 	# cleanup
@@ -244,7 +250,9 @@ service xinetd condrestart
 %_postun_userdel svn
 # restarting xinetd service
 service xinetd condrestart
+%if %mdkversion < 200900
 /sbin/ldconfig
+%endif
 
 %files server
 %defattr(-,root,root)
