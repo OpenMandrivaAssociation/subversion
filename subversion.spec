@@ -104,9 +104,11 @@ more users to collaborate in developing and maintaining a hierarchy of files
 and directories while keeping a history of all changes.  Subversion only stores
 the differences between versions, instead of every complete file.  Subversion
 also keeps a log of who, when, and why changes occured.
+
 As such it basically does the same thing CVS does (Concurrent Versioning
 System) but has major enhancements compared to CVS and fixes a lot of the
 annoyances that CVS users face.
+
 This package contains the client, if you're looking for the server end
 of things you want %name-repos. 
 
@@ -145,9 +147,11 @@ hierarchy of files and directories while keeping a history of all
 changes. Subversion only stores the differences between versions,
 instead of every complete file. Subversion also keeps a log of
 who, when, and why changes occured.
+
 As such it basically does the same thing CVS does (Concurrent
 Versioning System) but has major enhancements compared to CVS and
 fixes a lot of the annoyances that CVS users face.
+
 This package contains the subversion book and design info files.
 
 %post doc
