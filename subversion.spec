@@ -99,11 +99,11 @@ Requires: %{libsvn} = %{version}
 Buildroot:	%{_tmppath}/%{name}-%{version}-%{release}-buildroot
 
 %description
-Subversion is a concurrent version control system which enables one or more
-users to collaborate in developing and maintaining a hierarchy of files and
-directories while keeping a history of all changes.  Subversion only stores the
-differences between versions, instead of every complete file.  Subversion also
-keeps a log of who, when, and why changes occured.
+Subversion (SVN) is a concurrent version control system which enables one or
+more users to collaborate in developing and maintaining a hierarchy of files
+and directories while keeping a history of all changes.  Subversion only stores
+the differences between versions, instead of every complete file.  Subversion
+also keeps a log of who, when, and why changes occured.
 As such it basically does the same thing CVS does (Concurrent Versioning
 System) but has major enhancements compared to CVS and fixes a lot of the
 annoyances that CVS users face.
