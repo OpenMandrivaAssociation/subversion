@@ -1,4 +1,4 @@
-%define _requires_exceptions devel(libneon
+%define _requires_exceptions devel\(libneon\)
 
 %define apache_version 2.0.54
 %define libsvn %mklibname svn 0
@@ -11,7 +11,6 @@
 
 %define build_java 1
 %{?_with_java: %{expand: %%global build_java 1}}
-%define gcj_support 1
 
 %define build_perl 1
 %{?_without_perl: %{expand: %%global build_perl 0}}
@@ -19,12 +18,11 @@
 %define build_test 0
 %{?_with_test: %{expand: %%global build_test 1}}
 
-%define build_debug 0
-%{?_with_debug: %{expand: %%global build_debug 1}}
+%define with_debug 0
+%{?_with_debug: %{expand: %%global with_debug 1}}
 
 %if %mdkversion <= 200700
 %define build_java 0
-%define gcj_support 0
 %define build_ruby 0
 
 # play safe work around (misc)
@@ -34,8 +32,8 @@
 %endif
 
 Name: subversion
-Version: 1.4.6
-Release: %mkrel 7
+Version: 1.5.0
+Release: %mkrel 1
 Summary: A Concurrent Versioning System
 License: BSD CC2.0
 Group: Development/Other
@@ -47,9 +45,7 @@ Source4: %name.bash-completion
 Source5: %name-1.3.0-global-config
 Source6: %name-1.3.0-global-servers
 Source7: http://svnbook.red-bean.com/nightly/en/svn-book-html-chunk.tar.bz2
-Patch0: subversion-1.1.3-java.patch
-Patch2: subversion-1.3.0-rc6-swig-perl.patch
-Patch3: subversion-latest_neon.diff
+Patch0: subversion-1.5.0-underlink.patch
 # http://www.rz.uni-karlsruhe.de/~rz41/source/Patches/subversion-1.4.3/hook-scripts-patch
 Patch4: subversion-hook-script_pathfix.diff
 Patch5: subversion-propchange-email.diff
@@ -70,7 +66,8 @@ BuildRequires:	apr-devel >= 1:1.2.2
 BuildRequires:	apr-util-devel >= 1.2.2
 BuildRequires:	libxslt-proc
 BuildRequires:	docbook-style-xsl
-BuildRequires:	swig-devel >= 1.3.27
+# Swig is runtime only
+BuildRequires:	swig >= 1.3.27
 %if %mdkversion >= 1020
 BuildRequires:	multiarch-utils >= 1.0.3
 %endif
@@ -123,7 +120,6 @@ of things you want %name-repos.
 %_bindir/svn-log*
 %_bindir/svnlook
 %_sysconfdir/bash_completion.d/%name
-%_datadir/emacs/site-lisp/psvn.el
 %_mandir/man1/svn.*
 %_mandir/man1/svnlook.*
 %_mandir/man1/svnversion.*
@@ -190,9 +186,9 @@ Subversion common libraries
 # list all ra libs to make sure we don't miss any
 # in a bogus build
 %_libdir/libsvn_ra-1.so.*
-%_libdir/libsvn_ra_dav-1.so.*
 %_libdir/libsvn_ra_local-1.so.*
 %_libdir/libsvn_ra_svn-1.so.*
+%_libdir/libsvn_ra_neon-1.so.*
 %_libdir/libsvn_client*so.*
 %_libdir/libsvn_wc-*so.*
 %_libdir/libsvn_delta-*so.*
@@ -263,7 +259,6 @@ service xinetd condrestart
 %doc BUGS CHANGES COMMITTERS COPYING HACKING INSTALL README
 %doc notes/repos_upgrade_HOWTO
 %_bindir/svnserve
-%_bindir/server-vsn*
 %config(noreplace) %_sysconfdir/xinetd.d/svnserve
 %attr(0770,svn,svn) %{_localstatedir}/lib/svn
 %_mandir/man8/svnserve.8*
@@ -299,9 +294,9 @@ find it at http://cvs2svn.tigris.org/
 %_bindir/svnadmin
 %_bindir/svnsync
 %_bindir/svndumpfilter
+%_datadir/%name-%version/repo-tools
 %_mandir/man1/svnadmin.1*
 %_mandir/man1/svndumpfilter.1*
-%_datadir/%name-%version/repo-tools
 
 #--------------------------------------------------------------------------
 
@@ -389,6 +384,20 @@ subversion.  It's likely nobody will ever need these.
 #--------------------------------------------------------------------------
 
 %if %{build_java}
+%define libsvnjavahl %mklibname svnjavahl 0
+
+%package -n libsvnjavahl
+Summary: Svn Java bindings library
+Group: Libraries
+
+%description -n libsvnjavahl
+Svn Java bindings library
+
+%files -n libsvnjavahl
+%defattr(0644,root,root,0755)
+%_libdir/libsvnjavahl-1.so.*
+
+
 %package -n svn-javahl
 Epoch:          0
 Summary:	Java bindings for Subversion
@@ -397,15 +406,10 @@ Obsoletes:      java-svn < %{epoch}:%{version}-%{release}
 Provides:       java-svn = %{epoch}:%{version}-%{release}
 Provides:	java-subversion = %{epoch}:%{version}-%{release}
 Requires:	%{name} = %{version}-%{release}
-# soname didn't change between 1.3.x and 1.4.x, but we
-# need the right one
-Requires:       %{libsvn} = %{version}-%{release}
-%if %{gcj_support}
-BuildRequires: java-gcj-compat-devel
-%else
+Requires: %{libsvn} = %{version}-%{release}
+Requires: %{libsvnjavahl} = %{version}-%{release}
 BuildRequires:  java-devel
 BuildArch:      noarch
-%endif
 BuildRequires:  ant
 %if %mdkversion >= 200810
 BuildRequires:  java-rpmbuild >= 1.7.3-10
@@ -418,39 +422,12 @@ BuildRequires:  junit
 This package contains the files necessary to use the subversion
 library functions from Java.
 
-%package -n svn-javahl-javadoc
-Epoch:          0
-Summary:        Javadoc for svn-javahl
-Group:          Development/Java
-Provides:       java-subversion-doc = %{epoch}:%{version}-%{release}
-Provides:	java-svn-doc = %{epoch}:%{version}-%{release}
-
-%description -n svn-javahl-javadoc
-Javadoc for svn-javahl.
-
-%if %{gcj_support}
-%post -n svn-javahl
-%{update_gcjdb}
-
-%postun -n svn-javahl
-%{clean_gcjdb}
-%endif
-
 %files -n svn-javahl
 %defattr(0644,root,root,0755)
 %doc subversion/bindings/java/README
-%{_jnidir}/svn-javahl.jar
-%{_jnidir}/svn-javahl-%{version}.jar
-%attr(0755,root,root) %{_libdir}/libsvnjavahl-1.so
-%if %{gcj_support}
-%dir %{_libdir}/gcj/svn-javahl
-%attr(-,root,root) %{_libdir}/gcj/svn-javahl/*
-%endif
+%{_javadir}/svn-javahl.jar
+%{_javadir}/svn-javahl-%{version}.jar
 
-%files -n svn-javahl-javadoc
-%defattr(0644,root,root,0755)
-%doc %{_javadocdir}/svn-javahl-%{version}
-%doc %{_javadocdir}/svn-javahl
 %endif
 
 #--------------------------------------------------------------------------
@@ -478,6 +455,7 @@ library functions within perl scripts.
 %_libdir/libsvn_swig_perl*.so.*
 %{perl_vendorarch}/SVN
 %{perl_vendorarch}/auto/SVN
+%{perl_sitearch}/*
 %_mandir/man3/SVN::*.3*
 
 %package -n	perl-SVN-devel
@@ -521,6 +499,9 @@ subversion libraries.
 %_libdir/libsvn*.la
 %_includedir/subversion*/*
 %_libdir/libsvn_*.so
+%if %{build_java}
+%{_libdir}/libsvnjavahl-1.so
+%endif
 
 #----------------------------------------------------------------
 
@@ -624,23 +605,12 @@ fi
 
 %prep
 %setup -q -a 7
-%if %{build_java}
-%patch0 -p1 -b .java
-%endif
-%patch2 -p1 -b .perlswig
-%patch3 -p0 -b .neon
-%patch4 -p0 -b .hook-script_pathfix
-
+%patch0 -p1 -b .underlink
+#%patch4 -p0 -b .hook-script_pathfix
 # it was removed after 1.3.2 but still referenced in subversion/libsvn_repos/repos.c
-%patch5 -p1 -b .propchange-email
+#%patch5 -p1 -b .propchange-email
 
 rm -rf neon apr apr-util db4
-
-%if %{build_java}
-%{__perl} -pi -e 's|^LINK_JAVAHL_CXX =(.*)|LINK_JAVAHL_CXX =\1 -module -avoid-version|;' \
-              -e 's|^javahl_javadir =.*|javahl_javadir = %{_jnidir}|;' \
-  Makefile.in
-%endif
 
 # fix shellbang lines, #111498
 perl -pi -e 's|/usr/bin/env perl|%{_bindir}/perl|g' tools/hook-scripts/*.pl.in
@@ -653,10 +623,10 @@ mv svn-book-html-chunk svnbook-1.4
 
 %build
 %serverbuild
-./autogen.sh
 
-# override weird -shrext from ruby (from Fedora)
-export svn_cv_ruby_link="%{__cc} -shared"
+%if %{build_java}
+export JAVADIR=%{_jvmdir}/java
+%endif
 
 # both versions could be installed, use the latest one per default
 if [ -x %{_bindir}/apr-config ]; then APR=%{_bindir}/apr-config; fi
@@ -678,7 +648,7 @@ if [ -x %{_bindir}/apu-1-config ]; then APU=%{_bindir}/apu-1-config; fi
    --disable-mod-activation \
    --with-swig=%{_prefix} \
    --disable-static \
-%if %{build_debug}
+%if %{with_debug}
    --enable-maintainer-mode \
    --enable-debug \
 %endif
@@ -699,6 +669,9 @@ make swig-py swig_pydir=%{py_platsitedir}/libsvn swig_pydir_extra=%{py_sitedir}/
 
 %if %{build_perl}
 make swig-pl
+pushd  subversion/bindings/swig/perl/native
+	perl Makefile.PL
+popd
 %endif
 
 %if %{build_ruby}
@@ -707,7 +680,6 @@ make swig-rb
 
 %if %{build_java}
 %{make} javahl
-(cd subversion/bindings/java/javahl/build && %{ant} javadoc)
 %endif
 
 # compile the extra module as well...
@@ -749,6 +721,10 @@ make LC_ALL=C LANG=C LD_LIBRARY_PATH="`pwd`/subversion/bindings/swig/perl/libsvn
 %endif
 %if %{build_perl}
 %makeinstall_std install-swig-pl-lib
+pushd subversion/bindings/swig/perl/native/
+	perl Makefile.PL
+	%makeinstall_std
+popd
 %endif
 %if %{build_ruby}
 %makeinstall_std install-swig-rb
@@ -756,18 +732,12 @@ make LC_ALL=C LANG=C LD_LIBRARY_PATH="`pwd`/subversion/bindings/swig/perl/libsvn
 %if %{build_java}
 %{makeinstall_std} install-javahl
 
-%{__mv} %{buildroot}%{_jnidir}/svn-javahl.jar %{buildroot}%{_jnidir}/svn-javahl-%{version}.jar
-%{__ln_s} svn-javahl-%{version}.jar %{buildroot}%{_jnidir}/svn-javahl.jar
-
-%{__mkdir_p} %{buildroot}%{_javadocdir}/svn-javahl-%{version}
-%{__cp} -a subversion/bindings/java/javahl/javadoc/* %{buildroot}%{_javadocdir}/svn-javahl-%{version}
-%{__ln_s} svn-javahl-%{version} %{buildroot}%{_javadocdir}/svn-javahl
+mkdir -p %{buildroot}%{_javadir}
+%{__mv} %{buildroot}%{_libdir}/svn-javahl/svn-javahl.jar %{buildroot}%{_javadir}/svn-javahl-%{version}.jar
+%{__ln_s} svn-javahl-%{version}.jar %{buildroot}%{_javadir}/svn-javahl.jar
 
 %{_bindir}/chrpath -d %{buildroot}%{_libdir}/libsvnjavahl-1.so
 
-%if %{gcj_support}
-RPM_PACKAGE_NAME=svn-javahl %{_bindir}/aot-compile-rpm
-%endif
 %endif
 
 %if %{build_perl}
@@ -827,21 +797,15 @@ EOF
     install -m 644 contrib/client-side/svn.vim %buildroot/%_datadir/vim/syntax
 %endif
 
-# emacs psvn interface
-install -d -m 755 %buildroot/%_datadir/emacs/site-lisp
-install -m 644 contrib/client-side/psvn/psvn.el %buildroot/%_datadir/emacs/site-lisp
-
 # various commands
 install -m 755 contrib/client-side/search-svnlog.pl %buildroot%_bindir
 (cd  %buildroot/%_bindir; ln -sf  search-svnlog.pl search-svnlog)
 install -m 755 contrib/client-side/svn_all_diffs.pl %buildroot%_bindir
 (cd  %buildroot/%_bindir; ln -sf  svn_all_diffs.pl svn_all_diffs)
-install -m 755 contrib/client-side/svn_load_dirs.pl %buildroot%_bindir
+install -m 755 contrib/client-side/svn_load_dirs/svn_load_dirs.pl %buildroot%_bindir
 (cd  %buildroot/%_bindir; ln -sf  svn_load_dirs.pl svn_load_dirs)
 install -m 755 contrib/client-side/svn-log.pl %buildroot%_bindir
 (cd  %buildroot/%_bindir; ln -sf  svn-log.pl svn-log)
-install -m 755 tools/client-side/server-vsn.py %buildroot%_bindir
-(cd  %buildroot/%_bindir; ln -sf  server-vsn.py server-vsn)
 install -m 755 tools/client-side/showchange.pl %buildroot%_bindir
 (cd  %buildroot/%_bindir; ln -sf  showchange.pl showchange)
 
@@ -873,7 +837,6 @@ install -m 755 svnperms.py %buildroot/%_datadir/%name-%version/repo-tools/hook-s
 install -m 755 mailer/mailer.py %buildroot/%_datadir/%name-%version/repo-tools/hook-scripts
 install -m 644 mailer/mailer.conf.example %buildroot/%_datadir/%name-%version/repo-tools/hook-scripts
 install -m 644 README %buildroot/%_datadir/%name-%version/repo-tools/hook-scripts
-install -m 755 propchange-email.pl %buildroot/%_datadir/%name-%version/repo-tools/hook-scripts
 popd
 
 #xslt
@@ -928,19 +891,14 @@ EOF
 install -m 644 svnserve.xinetd %buildroot%_sysconfdir/xinetd.d/svnserve
 install -d %buildroot%{_localstatedir}/lib/svn/repositories
 
+# Move perl man
+mv %buildroot%_prefix/local/share/man/man3/* %buildroot%_mandir/man3/
+
 # cleanup
 find %buildroot -name "perllocal.pod" | xargs rm -f
 
 # fix libtool files perms
 chmod 644 %buildroot%_libdir/*.la
-
-%if %{build_java}
-%if 0
-%check
-export CLASSPATH=$(%{_bindir}/build-classpath junit):%{buildroot}%{_jnidir}/svn-javahl.jar:`pwd`/subversion/bindings/java/javahl/src
-%{java} -Djava.library.path=%{buildroot}%{_libdir} org.tigris.subversion.javahl.tests.BasicTests
-%endif
-%endif
 
 %clean
 rm -rf %buildroot
