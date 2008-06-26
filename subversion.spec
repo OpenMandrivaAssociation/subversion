@@ -409,7 +409,6 @@ Requires:	%{name} = %{version}-%{release}
 Requires: %{libsvn} = %{version}-%{release}
 Requires: %{libsvnjavahl} = %{version}-%{release}
 BuildRequires:  java-devel
-BuildArch:      noarch
 BuildRequires:  ant
 %if %mdkversion >= 200810
 BuildRequires:  java-rpmbuild >= 1.7.3-10
