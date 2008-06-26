@@ -388,7 +388,7 @@ subversion.  It's likely nobody will ever need these.
 
 %package -n libsvnjavahl
 Summary: Svn Java bindings library
-Group: Libraries
+Group: System/Libraries
 
 %description -n libsvnjavahl
 Svn Java bindings library
