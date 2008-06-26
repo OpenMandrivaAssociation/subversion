@@ -57,7 +57,7 @@ BuildRequires:	texinfo
 BuildRequires:	info-install
 BuildRequires:	db4-devel
 %if %{mdkversion} < 200610
-BuildRequires:	neon-devel >= 0.24.7
+BuildRequires:	neon-devel >= 0.25.0
 %else
 BuildRequires:	neon0.26-devel >= 0.26.4
 %endif
@@ -483,7 +483,7 @@ Obsoletes:	libsubversion1_0-devel < 1.2.3-4mdk
 Obsoletes:	libsubversion1_0-static-devel < 1.2.3-4mdk
 Requires: %libsvn = %version-%release
 %if %{mdkversion} < 200610
-Requires:	neon-devel >= 0.24.7
+Requires:	neon-devel >= 0.25.0
 %else
 Requires:	neon0.26-devel >= 0.26.4
 %endif
