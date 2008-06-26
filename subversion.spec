@@ -423,7 +423,7 @@ library functions from Java.
 
 %files -n svn-javahl
 %defattr(0644,root,root,0755)
-%doc subversion/bindings/java/README
+%doc subversion/bindings/javahl/README
 %{_javadir}/svn-javahl.jar
 %{_javadir}/svn-javahl-%{version}.jar
 
