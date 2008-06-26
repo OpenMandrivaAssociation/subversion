@@ -1,4 +1,4 @@
-%define _requires_exceptions devel\(libneon\)
+%define _requires_exceptions devel(libneon
 
 %define apache_version 2.0.54
 %define libsvn %mklibname svn 0
@@ -679,7 +679,7 @@ make swig-rb
 %endif
 
 %if %{build_java}
-%{make} javahl
+make javahl
 %endif
 
 # compile the extra module as well...
