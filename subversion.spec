@@ -386,14 +386,14 @@ subversion.  It's likely nobody will ever need these.
 %if %{build_java}
 %define libsvnjavahl %mklibname svnjavahl 0
 
-%package -n libsvnjavahl
+%package -n %{libsvnjavahl}
 Summary: Svn Java bindings library
 Group: System/Libraries
 
-%description -n libsvnjavahl
+%description -n %{libsvnjavahl}
 Svn Java bindings library
 
-%files -n libsvnjavahl
+%files -n %{libsvnjavahl}
 %defattr(0644,root,root,0755)
 %_libdir/libsvnjavahl-1.so.*
 
