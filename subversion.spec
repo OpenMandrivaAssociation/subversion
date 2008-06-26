@@ -33,7 +33,8 @@
 
 Name: subversion
 Version: 1.5.0
-Release: %mkrel 2
+Release: %mkrel 3
+Epoch: 2
 Summary: A Concurrent Versioning System
 License: BSD CC2.0
 Group: Development/Other
@@ -74,25 +75,25 @@ BuildRequires:	multiarch-utils >= 1.0.3
 # Obsoletes - kill all non sys build library packages
 # Just server and client need some libraries and we need just one
 # main ( client ) and one server package, as well bindings and doc packages
-Obsoletes: %name-client-tools < 1.2.3-4mdk
+Obsoletes: %name-client-tools < 2:1.2.3-4mdk
 Obsoletes: %name-repos < 1.2.3-4mdk
-Obsoletes: %{_lib}svn_client1_0 < 1.2.3-4mdk
-Obsoletes: %{_lib}svn_ra_dav1_0 < 1.2.3-4mdk
-Obsoletes: %{_lib}svn_ra_local1_0 < 1.2.3-4mdk
-Obsoletes: %{_lib}svn_ra_svn1_0 < 1.2.3-4mdk
-Obsoletes: %{_lib}svn_delta1_0 < 1.2.3-4mdk
-Obsoletes: %{_lib}svn_diff1_0 < 1.2.3-4mdk
-Obsoletes: %{_lib}svn_repos1_0 < 1.2.3-4mdk
-Obsoletes: %{_lib}svn_subr1_0 < 1.2.3-4mdk
-Obsoletes: %{_lib}svn_fs_fs1_0 < 1.2.3-4mdk
-Obsoletes: %{_lib}svn_fs_base1_0 < 1.2.3-4mdk
-Conflicts: %name-server < 1.2.3-4mdk
-Conflicts: %{libsvn} < 1.3.0-2mdk
-Provides: %name-ra-method = %version-%{release}
-Provides: %name-client-tools = %version-%{release}
+Obsoletes: %{_lib}svn_client1_0 < 2:1.2.3-4mdk
+Obsoletes: %{_lib}svn_ra_dav1_0 < 2:1.2.3-4mdk
+Obsoletes: %{_lib}svn_ra_local1_0 < 2:1.2.3-4mdk
+Obsoletes: %{_lib}svn_ra_svn1_0 < 2:1.2.3-4mdk
+Obsoletes: %{_lib}svn_delta1_0 < 2:1.2.3-4mdk
+Obsoletes: %{_lib}svn_diff1_0 < 2:1.2.3-4mdk
+Obsoletes: %{_lib}svn_repos1_0 < 2:1.2.3-4mdk
+Obsoletes: %{_lib}svn_subr1_0 < 2:1.2.3-4mdk
+Obsoletes: %{_lib}svn_fs_fs1_0 < 2:1.2.3-4mdk
+Obsoletes: %{_lib}svn_fs_base1_0 < 2:1.2.3-4mdk
+Conflicts: %name-server < 2:1.2.3-4mdk
+Conflicts: %{libsvn} < 2:1.3.0-2mdk
+Provides: %name-ra-method = %{epoch}:%version-%{release}
+Provides: %name-client-tools = %{epoch}:%version-%{release}
 # soname didn't change between 1.3.x and 1.4.x, but we
 # need the right one...
-Requires: %{libsvn} = %{version}
+Requires: %{libsvn} = %{epoch}:%{version}
 Buildroot:	%{_tmppath}/%{name}-%{version}-%{release}-buildroot
 
 %description
@@ -166,10 +167,10 @@ This package contains the subversion book and design info files.
 
 #--------------------------------------------------------------------------
 
-%package	-n %libsvn
-Summary:	Subversion libraries
-Group:		System/Libraries
-Conflicts:	subversion < 1.3.0-2mdk 
+%package -n %libsvn
+Summary: Subversion libraries
+Group: System/Libraries
+Conflicts: subversion < 2:1.3.0-2mdk 
 
 %description -n %libsvn
 Subversion common libraries
@@ -203,14 +204,14 @@ Subversion common libraries
 %package	server
 Summary:	Subversion Server
 Group:		System/Servers
-Requires: %name = %version-%{release}
+Requires: %name = %{epoch}:%version-%{release}
 Requires(pre):  rpm-helper
 Requires(postun): rpm-helper
 Requires(post): sed
 Requires: xinetd
 # soname didn't change between 1.3.x and 1.4.x, but we
 # need the right one...
-Requires: %{libsvn} = %{version}
+Requires: %{libsvn} = %{epoch}:%{version}
 BuildRoot: %{_tmppath}/%name-%version
 
 %description server
@@ -269,12 +270,12 @@ service xinetd condrestart
 %package tools
 Summary:	Subversion Repo/Server Tools
 Group: Development/Other
-Requires: %name = %version-%{release}
+Requires: %name = %{epoch}:%version-%{release}
 Conflicts: %name-server < 1.2.3-4mdk
 Obsoletes: %name-repo-tools < 1.2.3-4mdk
 # soname didn't change between 1.3.x and 1.4.x, but we
 # need the right one...
-Requires: %{libsvn} = %{version}
+Requires: %{libsvn} = %{epoch}:%{version}
 
 %description tools
 This package contains a myriad of tools for subversion server
@@ -310,7 +311,7 @@ Provides: python-subversion = %version-%{release}
 Requires: python
 # soname didn't change between 1.3.x and 1.4.x, but we
 # need the right one...
-Requires: %{libsvn} = %{version}
+Requires: %{libsvn} = %{epoch}:%{version}
 
 %description -n python-svn
 This package contains the files necessary to use the subversion
@@ -326,9 +327,9 @@ library functions within python scripts.
 %package -n	python-svn-devel
 Summary:	Python bindings for Subversion, development files
 Group: Development/Other
-Requires: python-svn = %version-%{release}
+Requires: python-svn = %{epoch}:%version-%{release}
 Obsoletes: python-svn-static-devel < 1.2.3-4mdk
-Provides: python-subversion-devel = %version-%{release}
+Provides: python-subversion-devel = %{epoch}:%version-%{release}
 
 %description -n python-svn-devel
 This package contains the .la files for the python bindings for
@@ -351,8 +352,8 @@ BuildRequires: ruby-devel
 Requires: ruby
 # soname didn't change between 1.3.x and 1.4.x, but we
 # need the right one...
-Requires: %{libsvn} = %{version}
-Provides: ruby-subversion = %version-%{release}
+Requires: %{libsvn} = %{epoch}:%{version}
+Provides: ruby-subversion = %{epoch}:%version-%{release}
 
 %description -n	ruby-svn
 This package contains the files necessary to use the subversion
@@ -361,7 +362,7 @@ library functions within ruby scripts.
 %package -n	ruby-svn-devel
 Summary:	Ruby bindings for Subversion, development libraries
 Group: Development/Ruby
-Requires:       ruby-svn = %version-%{release}
+Requires:       ruby-svn = %{epoch}:%version-%{release}
 
 %description -n	ruby-svn-devel
 This package contains the .la files for the ruby bindings for
@@ -399,15 +400,14 @@ Svn Java bindings library
 
 
 %package -n svn-javahl
-Epoch:          0
 Summary:	Java bindings for Subversion
 Group:		Development/Java
 Obsoletes:      java-svn < %{epoch}:%{version}-%{release}
 Provides:       java-svn = %{epoch}:%{version}-%{release}
 Provides:	java-subversion = %{epoch}:%{version}-%{release}
-Requires:	%{name} = %{version}-%{release}
-Requires: %{libsvn} = %{version}-%{release}
-Requires: %{libsvnjavahl} = %{version}-%{release}
+Requires:	%{name} = %{epoch}:%{version}-%{release}
+Requires: %{libsvn} = %{epoch}:%{version}-%{release}
+Requires: %{libsvnjavahl} = %{epoch}:%{version}-%{release}
 BuildRequires:  java-devel
 BuildRequires:  ant
 %if %mdkversion >= 200810
@@ -437,12 +437,10 @@ library functions from Java.
 Summary:	Perl bindings for Subversion
 Group:		Development/Perl
 BuildRequires: perl-devel
-Requires:	%name = %version-%{release}
+Requires:	%name = %{epoch}:%version-%{release}
 Obsoletes:	perl-svn
-Provides:	perl-svn = %version-%{release}
-# soname didn't change between 1.3.x and 1.4.x, but we
-# need the right one...
-Requires: %{libsvn} = %{version}
+Provides:	perl-svn = %{epoch}:%version-%{release}
+Requires: %{libsvn} = %{epoch}:%{version}
 
 %description -n perl-SVN
 This package contains the files necessary to use the subversion
@@ -460,7 +458,7 @@ library functions within perl scripts.
 %package -n	perl-SVN-devel
 Summary:	Perl bindings for Subversion, development files 
 Group:		Development/Other
-Requires:	perl-SVN = %version-%{release}
+Requires:	perl-SVN = %{epoch}:%version-%{release}
 Obsoletes:	perl-svn-devel
 
 %description -n perl-SVN-devel
@@ -478,10 +476,10 @@ subversion.  It's likely nobody will ever need these.
 %package devel
 Summary:	Subversion headers/libraries for development
 Group:		Development/Other
-Provides:	%{_lib}svn-devel = %version-%{release}
+Provides:	libsvn-devel = %{epoch}:%version-%{release}
 Obsoletes:	libsubversion1_0-devel < 1.2.3-4mdk
 Obsoletes:	libsubversion1_0-static-devel < 1.2.3-4mdk
-Requires: %libsvn = %version-%release
+Requires: %libsvn = %{epoch}:%version-%release
 %if %{mdkversion} < 200610
 Requires:	neon-devel >= 0.25.0
 %else
@@ -515,8 +513,7 @@ subversion libraries.
 %package -n	apache-mod_dav_svn
 Summary:	Subversion server DSO module for apache
 Group:		System/Servers
-Epoch:		1
-Requires: %name-tools = %version-%{release}
+Requires: %name-tools = %{epoch}:%version-%{release}
 Requires(pre): rpm-helper
 Requires(postun): rpm-helper
 Requires(pre):	apache-conf >= %{apache_version}
@@ -524,7 +521,7 @@ Requires(pre):	apache >= %{apache_version}
 Requires(pre):	apache-mod_dav >= %{apache_version}
 # soname didn't change between 1.3.x and 1.4.x, but we
 # need the right one...
-Requires(pre): %{libsvn} = %{version}
+Requires(pre): %{libsvn} = %{epoch}:%{version}
 Obsoletes:	apache-mod_authz_svn
 
 %description -n apache-mod_dav_svn
@@ -566,12 +563,11 @@ fi
 %package -n	apache-mod_dontdothat
 Summary:	An Apache module that allows you to block specific types of Subversion requests
 Group:		System/Servers
-Epoch:		0
 Requires(pre): rpm-helper
 Requires(postun): rpm-helper
 Requires(pre):	apache-conf >= %{apache_version}
 Requires(pre):	apache >= %{apache_version}
-Requires(pre):	apache-mod_dav_svn = 1:%{version}
+Requires(pre):	apache-mod_dav_svn = %{epoch}:%{version}
 
 %description -n apache-mod_dontdothat
 mod_dontdothat is an Apache module that allows you to block specific types
