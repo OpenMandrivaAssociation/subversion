@@ -33,7 +33,7 @@
 
 Name: subversion
 Version: 1.5.0
-Release: %mkrel 3
+Release: %mkrel 4
 Epoch: 2
 Summary: A Concurrent Versioning System
 License: BSD CC2.0
@@ -60,7 +60,7 @@ BuildRequires:	db4-devel
 %if %{mdkversion} < 200610
 BuildRequires:	neon-devel >= 0.25.0
 %else
-BuildRequires:	neon0.26-devel >= 0.26.4
+BuildRequires:	neon-devel
 %endif
 BuildRequires:	apache-devel >=  %{apache_version}
 BuildRequires:	apr-devel >= 1:1.2.2
@@ -483,7 +483,7 @@ Requires: %libsvn = %{epoch}:%version-%release
 %if %{mdkversion} < 200610
 Requires:	neon-devel >= 0.25.0
 %else
-Requires:	neon0.26-devel >= 0.26.4
+Requires:	neon-devel
 %endif
 
 %description devel
