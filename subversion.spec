@@ -33,7 +33,7 @@
 
 Name: subversion
 Version: 1.5.1
-Release: %mkrel 1
+Release: %mkrel 2
 Epoch: 2
 Summary: A Concurrent Versioning System
 License: BSD CC2.0
@@ -67,6 +67,7 @@ BuildRequires:	apr-devel >= 1:1.2.2
 BuildRequires:	apr-util-devel >= 1.2.2
 BuildRequires:	libxslt-proc
 BuildRequires:	docbook-style-xsl
+BuildRequires:	serf-devel
 # Swig is runtime only
 BuildRequires:	swig >= 1.3.27
 %if %mdkversion >= 1020
@@ -190,6 +191,7 @@ Subversion common libraries
 %_libdir/libsvn_ra_local-1.so.*
 %_libdir/libsvn_ra_svn-1.so.*
 %_libdir/libsvn_ra_neon-1.so.*
+%_libdir/libsvn_ra_serf-*.so.*
 %_libdir/libsvn_client*so.*
 %_libdir/libsvn_wc-*so.*
 %_libdir/libsvn_delta-*so.*
@@ -616,6 +618,9 @@ chmod 644 BUGS CHANGES COMMITTERS COPYING HACKING INSTALL README
 # move latest svnbook snapshot as their target version
 mv svn-book-html-chunk svnbook-1.5
 
+# lib64 fixes
+perl -pi -e "s|\\$serf_prefix/lib\b|\\$serf_prefix/%{_lib}|g" build/ac-macros/serf.m4 configure*
+
 %build
 %serverbuild
 
@@ -651,7 +656,8 @@ if [ -x %{_bindir}/apu-1-config ]; then APU=%{_bindir}/apu-1-config; fi
    --with-jdk=%{java_home} \
    --with-junit=%{_javadir}/junit.jar \
 %endif
-   --enable-shared 
+   --enable-shared \
+   --with-serf=%{_prefix}
 
 # put the apache modules in the correct place
 perl -pi -e "s|%_libdir/apache|%_libdir/apache-extramodules|g" Makefile subversion/mod_authz_svn/*la subversion/mod_dav_svn/*la
