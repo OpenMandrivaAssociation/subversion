@@ -657,7 +657,8 @@ if [ -x %{_bindir}/apu-1-config ]; then APU=%{_bindir}/apu-1-config; fi
    --with-junit=%{_javadir}/junit.jar \
 %endif
    --enable-shared \
-   --with-serf=%{_prefix}
+   --with-serf=%{_prefix} \
+   --disable-neon-version-check
 
 # put the apache modules in the correct place
 perl -pi -e "s|%_libdir/apache|%_libdir/apache-extramodules|g" Makefile subversion/mod_authz_svn/*la subversion/mod_dav_svn/*la
