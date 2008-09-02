@@ -33,7 +33,7 @@
 
 Name: subversion
 Version: 1.5.2
-Release: %mkrel 1
+Release: %mkrel 2
 Epoch: 2
 Summary: A Concurrent Versioning System
 License: BSD CC2.0
@@ -92,8 +92,7 @@ Conflicts: %name-server < 2:1.2.3-4mdk
 Conflicts: %{libsvn} < 2:1.3.0-2mdk
 Provides: %name-ra-method = %{epoch}:%version-%{release}
 Provides: %name-client-tools = %{epoch}:%version-%{release}
-# soname didn't change between 1.3.x and 1.4.x, but we
-# need the right one...
+Provides: svn = %{epoch}:%{version}
 Requires: %{libsvn} = %{epoch}:%{version}
 Buildroot:	%{_tmppath}/%{name}-%{version}-%{release}-buildroot
 
@@ -326,21 +325,6 @@ library functions within python scripts.
 %{py_platsitedir}/libsvn
 %doc tools/examples/*.py subversion/bindings/swig/INSTALL subversion/bindings/swig/NOTES
 
-%package -n	python-svn-devel
-Summary:	Python bindings for Subversion, development files
-Group: Development/Other
-Requires: python-svn = %{epoch}:%version-%{release}
-Obsoletes: python-svn-static-devel < 1.2.3-4mdk
-Provides: python-subversion-devel = %{epoch}:%version-%{release}
-
-%description -n python-svn-devel
-This package contains the .la files for the python bindings for
-subversion.  It's likely nobody will ever need these.
-
-%files -n python-svn-devel
-%defattr(-,root,root)
-%_libdir/libsvn_swig_py*.so
-
 %endif
 
 #--------------------------------------------------------------------------
@@ -352,8 +336,6 @@ Summary:	Ruby bindings for Subversion
 Group: Development/Ruby
 BuildRequires: ruby-devel
 Requires: ruby
-# soname didn't change between 1.3.x and 1.4.x, but we
-# need the right one...
 Requires: %{libsvn} = %{epoch}:%{version}
 Provides: ruby-subversion = %{epoch}:%version-%{release}
 
@@ -361,26 +343,12 @@ Provides: ruby-subversion = %{epoch}:%version-%{release}
 This package contains the files necessary to use the subversion
 library functions within ruby scripts.
 
-%package -n	ruby-svn-devel
-Summary:	Ruby bindings for Subversion, development libraries
-Group: Development/Ruby
-Requires:       ruby-svn = %{epoch}:%version-%{release}
-
-%description -n	ruby-svn-devel
-This package contains the .la files for the ruby bindings for
-subversion.  It's likely nobody will ever need these.
-
 %files -n ruby-svn
 %defattr(-,root,root)
 %ruby_sitearchdir/svn
 %exclude %ruby_sitearchdir/*/*/*.la
 %ruby_sitelibdir/*/*.rb
 %_libdir/libsvn_swig_ruby*.so.*
-
-%files -n ruby-svn-devel
-%defattr(-,root,root)
-%ruby_sitearchdir/*/*/*.la
-%_libdir/libsvn_swig_ruby*.so
 
 %endif
 
@@ -457,35 +425,39 @@ library functions within perl scripts.
 %{perl_sitearch}/*
 %_mandir/man3/SVN::*.3*
 
-%package -n	perl-SVN-devel
-Summary:	Perl bindings for Subversion, development files 
-Group:		Development/Other
-Requires:	perl-SVN = %{epoch}:%version-%{release}
-Obsoletes:	perl-svn-devel
-
-%description -n perl-SVN-devel
-This package contains the .so files for the perl bindings for
-subversion.  It's likely nobody will ever need these.
-
-%files -n perl-SVN-devel
-%defattr(-,root,root)
-%_libdir/libsvn_swig_perl*.so
-
 %endif
 
 #----------------------------------------------------------------
 
 %package devel
-Summary:	Subversion headers/libraries for development
-Group:		Development/Other
-Provides:	libsvn-devel = %{epoch}:%version-%{release}
-Obsoletes:	libsubversion1_0-devel < 1.2.3-4mdk
-Obsoletes:	libsubversion1_0-static-devel < 1.2.3-4mdk
+Summary: Subversion headers/libraries for development
+Group: Development/Other
+Provides: libsvn-devel = %{epoch}:%version-%{release}
+Obsoletes: libsubversion1_0-devel < 1.2.3-4mdk
+Obsoletes: libsubversion1_0-static-devel < 1.2.3-4mdk
+%if %{build_java}
+Requires: svn-javahl = %{epoch}:%{version}
+%endif
+%if %{build_perl}
+Requires: perl-SVN = %{epoch}:%{version}
+Obsoletes: perl-SVN-devel < 2:1.5.2-2
+Provides: per-SVN-devel = %{epoch}:%{version}
+%endif
+%if %{build_perl}
+Requires: python-svn = %{epoch}:%{version}
+Obsoletes: python-svn-devel < 2:1.5.2-2
+Provides: python-svn-devel = %{epoch}:%{version}
+%endif
+%if %{build_perl}
+Requires: ruby-svn = %{epoch}:%{version}
+Obsoletes: ruby-svn-devel < 2:1.5.2-2
+Provides: ruby-svn-devel = %{epoch}:%{version}
+%endif
 Requires: %libsvn = %{epoch}:%version-%release
 %if %{mdkversion} < 200610
-Requires:	neon-devel >= 0.25.0
+Requires: neon-devel >= 0.25.0
 %else
-Requires:	neon-devel
+Requires: neon-devel
 %endif
 
 %description devel
@@ -497,10 +469,8 @@ subversion libraries.
 %doc tools/examples/minimal_client.c
 %_libdir/libsvn*.la
 %_includedir/subversion*/*
-%_libdir/libsvn_*.so
-%if %{build_java}
-%{_libdir}/libsvnjavahl-1.so
-%endif
+%_libdir/libsvn*.so
+
 
 #----------------------------------------------------------------
 
