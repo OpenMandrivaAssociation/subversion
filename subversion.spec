@@ -33,7 +33,7 @@
 
 Name: subversion
 Version: 1.5.2
-Release: %mkrel 2
+Release: %mkrel 3
 Epoch: 2
 Summary: A Concurrent Versioning System
 License: BSD CC2.0
@@ -209,14 +209,13 @@ Requires: %name = %{epoch}:%version-%{release}
 Requires(pre):  rpm-helper
 Requires(postun): rpm-helper
 Requires(post): sed
-Requires: xinetd
 # soname didn't change between 1.3.x and 1.4.x, but we
 # need the right one...
 Requires: %{libsvn} = %{epoch}:%{version}
 BuildRoot: %{_tmppath}/%name-%version
 
 %description server
-This package contains a myriad of server for subversion server
+This package contains a myriad of tools for subversion server
 and repository admins:
   * hot-backup makes a backup of a svn repo without stopping
   * mirror_dir_through_svn.cgi 
