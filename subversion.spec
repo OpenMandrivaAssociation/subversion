@@ -1,6 +1,6 @@
 %define _requires_exceptions devel(libneon
 
-%define apache_version 2.0.54
+%define apache_version 2.2.0
 %define libsvn %mklibname svn 0
 
 %define build_python 1
@@ -32,14 +32,14 @@
 %endif
 
 Name: subversion
-Version: 1.5.2
-Release: %mkrel 3
+Version: 1.5.3
+Release: %mkrel 1
 Epoch: 2
 Summary: A Concurrent Versioning System
 License: BSD CC2.0
 Group: Development/Other
 URL: http://subversion.tigris.org
-Source0: http://subversion.tigris.org/tarballs/%name-%version.tar.bz2
+Source0: http://subversion.tigris.org/tarballs/%name-%version.tar.gz
 Source2: %mod_dav_conf
 Source3: %mod_authz_conf
 Source4: %name.bash-completion
