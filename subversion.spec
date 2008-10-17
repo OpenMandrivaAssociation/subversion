@@ -33,7 +33,7 @@
 
 Name: subversion
 Version: 1.5.3
-Release: %mkrel 1
+Release: %mkrel 2
 Epoch: 2
 Summary: A Concurrent Versioning System
 License: BSD CC2.0
@@ -244,13 +244,8 @@ if ! grep -qE '^svn[[:space:]]+3690/(tcp|udp)[[:space:]]+svnserve' %{_sysconfdir
 	echo -e "svn\t3690/udp\tsvnserve\t# Subversion svnserve" >> /etc/services
 fi
 
-# restarting xinetd service
-service xinetd condrestart
-
 %postun server
 %_postun_userdel svn
-# restarting xinetd service
-service xinetd condrestart
 %if %mdkversion < 200900
 /sbin/ldconfig
 %endif
