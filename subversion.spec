@@ -33,7 +33,7 @@
 
 Name: subversion
 Version: 1.5.4
-Release: %mkrel 1
+Release: %mkrel 2
 Epoch: 2
 Summary: A Concurrent Versioning System
 License: BSD CC2.0
@@ -442,7 +442,7 @@ Requires: python-svn = %{epoch}:%{version}
 Obsoletes: python-svn-devel < 2:1.5.2-2
 Provides: python-svn-devel = %{epoch}:%{version}
 %endif
-%if %{build_perl}
+%if %{build_ruby}
 Requires: ruby-svn = %{epoch}:%{version}
 Obsoletes: ruby-svn-devel < 2:1.5.2-2
 Provides: ruby-svn-devel = %{epoch}:%{version}
