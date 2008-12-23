@@ -32,8 +32,8 @@
 %endif
 
 Name: subversion
-Version: 1.5.4
-Release: %mkrel 3
+Version: 1.5.5
+Release: %mkrel 1
 Epoch: 2
 Summary: A Concurrent Versioning System
 License: BSD CC2.0
@@ -50,6 +50,7 @@ Patch0: subversion-1.5.0-underlink.patch
 # http://www.rz.uni-karlsruhe.de/~rz41/source/Patches/subversion-1.4.3/hook-scripts-patch
 Patch4: subversion-hook-script_pathfix.diff
 Patch5: subversion-propchange-email.diff
+Patch6: subversion-1.5.5-format_not_a_string_literal_and_no_format_arguments.diff
 BuildRequires:	autoconf >= 2.54
 BuildRequires:	libtool >= 1.4.2
 BuildRequires:	chrpath
@@ -570,6 +571,7 @@ fi
 #%patch4 -p0 -b .hook-script_pathfix
 # it was removed after 1.3.2 but still referenced in subversion/libsvn_repos/repos.c
 #%patch5 -p1 -b .propchange-email
+%patch6 -p1 -b .format_not_a_string_literal_and_no_format_arguments
 
 rm -rf neon apr apr-util db4
 
