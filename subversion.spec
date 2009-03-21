@@ -9,7 +9,7 @@
 %define build_ruby 1
 %{?_without_ruby: %{expand: %%global build_ruby 0}}
 
-%define build_java 1
+%define build_java 0
 %{?_with_java: %{expand: %%global build_java 1}}
 
 %define build_perl 1
@@ -32,8 +32,8 @@
 %endif
 
 Name: subversion
-Version: 1.5.5
-Release: %mkrel 2
+Version: 1.6.0
+Release: %mkrel 0.1
 Epoch: 2
 Summary: A Concurrent Versioning System
 License: BSD CC2.0
@@ -64,11 +64,12 @@ BuildRequires:	neon-devel >= 0.25.0
 BuildRequires:	neon-devel
 %endif
 BuildRequires:	apache-devel >=  %{apache_version}
-BuildRequires:	apr-devel >= 1:1.2.2
-BuildRequires:	apr-util-devel >= 1.2.2
+BuildRequires:	apr-devel >= 1:1.3.0
+BuildRequires:	apr-util-devel >= 1.3.0
 BuildRequires:	libxslt-proc
 BuildRequires:	docbook-style-xsl
-BuildRequires:	serf-devel
+BuildRequires:	serf-devel >= 0.3.0
+BuildRequires:	sqlite3-devel >= 3.4.0
 # Swig is runtime only
 BuildRequires:	swig >= 1.3.27
 %if %mdkversion >= 1020
@@ -582,7 +583,7 @@ perl -pi -e 's|/usr/bin/env perl|%{_bindir}/perl|g' tools/hook-scripts/*.pl.in
 chmod 644 BUGS CHANGES COMMITTERS COPYING HACKING INSTALL README
 
 # move latest svnbook snapshot as their target version
-mv svn-book-html-chunk svnbook-1.5
+mv svn-book-html-chunk svnbook-1.6
 
 # lib64 fixes
 perl -pi -e "s|\\$serf_prefix/lib\b|\\$serf_prefix/%{_lib}|g" build/ac-macros/serf.m4 configure*
@@ -594,13 +595,6 @@ perl -pi -e "s|\\$serf_prefix/lib\b|\\$serf_prefix/%{_lib}|g" build/ac-macros/se
 export JAVADIR=%{_jvmdir}/java
 %endif
 
-# both versions could be installed, use the latest one per default
-if [ -x %{_bindir}/apr-config ]; then APR=%{_bindir}/apr-config; fi
-if [ -x %{_bindir}/apu-config ]; then APU=%{_bindir}/apu-config; fi
-
-if [ -x %{_bindir}/apr-1-config ]; then APR=%{_bindir}/apr-1-config; fi
-if [ -x %{_bindir}/apu-1-config ]; then APU=%{_bindir}/apu-1-config; fi
-
 ./configure \
    --prefix=%{_prefix} \
    --sysconfdir=%_sysconfdir \
@@ -608,9 +602,11 @@ if [ -x %{_bindir}/apu-1-config ]; then APU=%{_bindir}/apu-1-config; fi
    --libdir=%_libdir \
    --localstatedir=/var/lib \
    --mandir=%_mandir \
+   --with-apr_memcache=%{_prefix} \
    --with-apxs=%{_sbindir}/apxs \
-   --with-apr=$APR \
-   --with-apr-util=$APU \
+   --with-apache-libexecdir=%{_libdir}/apache-extramodules \
+   --with-apr=%{_bindir}/apr-1-config \
+   --with-apr-util=%{_bindir}/apu-1-config \
    --disable-mod-activation \
    --with-swig=%{_prefix} \
    --disable-static \
@@ -624,10 +620,8 @@ if [ -x %{_bindir}/apu-1-config ]; then APU=%{_bindir}/apu-1-config; fi
 %endif
    --enable-shared \
    --with-serf=%{_prefix} \
-   --disable-neon-version-check
-
-# put the apache modules in the correct place
-perl -pi -e "s|%_libdir/apache|%_libdir/apache-extramodules|g" Makefile subversion/mod_authz_svn/*la subversion/mod_dav_svn/*la
+   --disable-neon-version-check \
+   --with-sqlite=%{_prefix}
 
 %{make} all
 
@@ -654,9 +648,6 @@ make javahl
 %{_sbindir}/apxs -c -Isubversion/include -Isubversion \
     contrib/server-side/mod_dontdothat/mod_dontdothat.c \
     subversion/libsvn_subr/libsvn_subr-1.la
-
-# put the apache modules in the correct place
-perl -pi -e "s|%_libdir/apache|%_libdir/apache-extramodules|g" contrib/server-side/mod_dontdothat/mod_dontdothat.la
 
 %install
 rm -rf %buildroot
