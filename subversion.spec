@@ -790,12 +790,15 @@ install -d -m755 %buildroot%_datadir/%name-%version/repo-tools/hook-scripts
 pushd tools/hook-scripts
 install -m 644 commit-access-control.cfg.example %buildroot/%_datadir/%name-%version/repo-tools/hook-scripts
 install -m 755 commit-access-control.pl %buildroot/%_datadir/%name-%version/repo-tools/hook-scripts
-install -m 755 commit-email.pl %buildroot/%_datadir/%name-%version/repo-tools/hook-scripts
 install -m 644 svnperms.conf.example %buildroot/%_datadir/%name-%version/repo-tools/hook-scripts
 install -m 755 svnperms.py %buildroot/%_datadir/%name-%version/repo-tools/hook-scripts
 install -m 755 mailer/mailer.py %buildroot/%_datadir/%name-%version/repo-tools/hook-scripts
 install -m 644 mailer/mailer.conf.example %buildroot/%_datadir/%name-%version/repo-tools/hook-scripts
 install -m 644 README %buildroot/%_datadir/%name-%version/repo-tools/hook-scripts
+popd
+
+pushd contrib/hook-scripts
+install -m 755 commit-email.pl %buildroot/%_datadir/%name-%version/repo-tools/hook-scripts
 popd
 
 #xslt
