@@ -709,10 +709,10 @@ cat %{SOURCE2} > %buildroot%_sysconfdir/httpd/modules.d/%{mod_dav_conf}
 cat %{SOURCE3} > %buildroot%_sysconfdir/httpd/modules.d/%{mod_authz_conf}
 
 # install the extra module
-libtool --mode=install cp contrib/server-side/mod_dontdothat/mod_dontdothat.la %{buildroot}%{_libdir}/apache-extramodules/
+install -m0755 contrib/server-side/mod_dontdothat/.libs/mod_dontdothat.so %{buildroot}%{_libdir}/apache-extramodules/
 
 # cleanup
-rm -f %{buildroot}%{_libdir}/apache-extramodules/mod_dontdothat.*a
+rm -f %{buildroot}%{_libdir}/apache-extramodules/*.*a
 
 cat > %{buildroot}%{_sysconfdir}/httpd/modules.d/48_mod_dontdothat.conf << EOF
 <IfDefine HAVE_DONTDOTHAT>
