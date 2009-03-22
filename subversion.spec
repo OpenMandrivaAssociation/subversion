@@ -9,7 +9,7 @@
 %define build_ruby 1
 %{?_without_ruby: %{expand: %%global build_ruby 0}}
 
-%define build_java 0
+%define build_java 1
 %{?_with_java: %{expand: %%global build_java 1}}
 
 %define build_perl 1
@@ -33,7 +33,7 @@
 
 Name: subversion
 Version: 1.6.0
-Release: %mkrel 1
+Release: %mkrel 2
 Epoch: 2
 Summary: A Concurrent Versioning System
 License: BSD CC2.0
