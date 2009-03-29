@@ -3,6 +3,10 @@
 %define apache_version 2.2.0
 %define libsvn %mklibname svn 0
 
+# Java requires devel symlinks in non-devel packages due to design
+# (System.loadLibrary). Do not add -devel dependencies.
+%define _exclude_files_from_autoreq ^%_libdir/libsvnjavahl-%{svnjavahl_api}.so$
+
 %define build_python 1
 %{?_without_python: %{expand: %%global build_python 0}}
 
@@ -33,7 +37,7 @@
 
 Name: subversion
 Version: 1.6.0
-Release: %mkrel 2
+Release: %mkrel 3
 Epoch: 2
 Summary: A Concurrent Versioning System
 License: BSD CC2.0
@@ -351,18 +355,20 @@ library functions within ruby scripts.
 #--------------------------------------------------------------------------
 
 %if %{build_java}
-%define libsvnjavahl %mklibname svnjavahl 0
+%define svnjavahl_api 1
+%define libsvnjavahl %mklibname svnjavahl %{svnjavahl_api}
 
 %package -n %{libsvnjavahl}
 Summary: Svn Java bindings library
 Group: System/Libraries
+Conflicts: subversion-devel < 2:1.6.0-3
 
 %description -n %{libsvnjavahl}
 Svn Java bindings library
 
 %files -n %{libsvnjavahl}
 %defattr(0644,root,root,0755)
-%_libdir/libsvnjavahl-1.so.*
+%_libdir/libsvnjavahl-%{svnjavahl_api}.*
 
 
 %package -n svn-javahl
@@ -431,9 +437,6 @@ Group: Development/Other
 Provides: libsvn-devel = %{epoch}:%version-%{release}
 Obsoletes: libsubversion1_0-devel < 1.2.3-4mdk
 Obsoletes: libsubversion1_0-static-devel < 1.2.3-4mdk
-%if %{build_java}
-Requires: svn-javahl = %{epoch}:%{version}
-%endif
 %if %{build_perl}
 Requires: perl-SVN = %{epoch}:%{version}
 Obsoletes: perl-SVN-devel < 2:1.5.2-2
@@ -466,6 +469,9 @@ subversion libraries.
 %_libdir/libsvn*.la
 %_includedir/subversion*/*
 %_libdir/libsvn*.so
+%if %{build_java}
+%exclude %_libdir/libsvnjavahl*
+%endif
 
 
 #----------------------------------------------------------------
