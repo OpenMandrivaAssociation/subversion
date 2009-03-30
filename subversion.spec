@@ -37,7 +37,7 @@
 
 Name: subversion
 Version: 1.6.0
-Release: %mkrel 3
+Release: %mkrel 4
 Epoch: 2
 Summary: A Concurrent Versioning System
 License: BSD CC2.0
@@ -355,6 +355,8 @@ library functions within ruby scripts.
 #--------------------------------------------------------------------------
 
 %if %{build_java}
+# We have the non-major symlink also in this package (due to java design),
+# so we only have %api in package name.
 %define svnjavahl_api 1
 %define libsvnjavahl %mklibname svnjavahl %{svnjavahl_api}
 
@@ -362,6 +364,7 @@ library functions within ruby scripts.
 Summary: Svn Java bindings library
 Group: System/Libraries
 Conflicts: subversion-devel < 2:1.6.0-3
+Obsoletes: %{_lib}svnjavahl0 < 2:1.6.0-3
 
 %description -n %{libsvnjavahl}
 Svn Java bindings library
