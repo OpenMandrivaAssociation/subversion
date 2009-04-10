@@ -36,8 +36,8 @@
 %endif
 
 Name: subversion
-Version: 1.6.0
-Release: %mkrel 4
+Version: 1.6.1
+Release: %mkrel 1
 Epoch: 2
 Summary: A Concurrent Versioning System
 License: BSD CC2.0
