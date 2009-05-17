@@ -37,7 +37,7 @@
 
 Name: subversion
 Version: 1.6.2
-Release: %mkrel 1
+Release: %mkrel 2
 Epoch: 2
 Summary: A Concurrent Versioning System
 License: BSD CC2.0
@@ -46,7 +46,6 @@ URL: http://subversion.tigris.org
 Source0: http://subversion.tigris.org/tarballs/%name-%version.tar.gz
 Source2: %mod_dav_conf
 Source3: %mod_authz_conf
-Source4: %name.bash-completion
 Source5: %name-1.3.0-global-config
 Source6: %name-1.3.0-global-servers
 Source7: http://svnbook.red-bean.com/nightly/en/svn-book-html-chunk.tar.bz2
@@ -126,7 +125,6 @@ of things you want %name-repos.
 %_bindir/svn_load_dirs*
 %_bindir/svn-log*
 %_bindir/svnlook
-%_sysconfdir/bash_completion.d/%name
 %_mandir/man1/svn.*
 %_mandir/man1/svnlook.*
 %_mandir/man1/svnversion.*
@@ -776,10 +774,6 @@ install -m 755 contrib/client-side/svn-log.pl %buildroot%_bindir
 (cd  %buildroot/%_bindir; ln -sf  svn-log.pl svn-log)
 install -m 755 tools/client-side/showchange.pl %buildroot%_bindir
 (cd  %buildroot/%_bindir; ln -sf  showchange.pl showchange)
-
-# bash completion
-install -d -m 755 %buildroot%_sysconfdir/bash_completion.d
-install -m 644 %SOURCE4 %buildroot%_sysconfdir/bash_completion.d/%name
 
 # Global configs
 install -d -m 755 %buildroot%_sysconfdir/subversion
