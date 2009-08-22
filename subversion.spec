@@ -36,7 +36,7 @@
 %endif
 
 Name: subversion
-Version: 1.6.4
+Version: 1.6.5
 Release: %mkrel 1
 Epoch: 2
 Summary: A Concurrent Versioning System
