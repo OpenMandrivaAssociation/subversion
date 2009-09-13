@@ -37,7 +37,7 @@
 
 Name: subversion
 Version: 1.6.5
-Release: %mkrel 1
+Release: %mkrel 2
 Epoch: 2
 Summary: A Concurrent Versioning System
 License: BSD CC2.0
@@ -260,7 +260,7 @@ fi
 %doc notes/repos_upgrade_HOWTO
 %_bindir/svnserve
 %config(noreplace) %_sysconfdir/xinetd.d/svnserve
-%attr(0770,svn,svn) /var/lib/svn
+/var/lib/svn
 %_mandir/man8/svnserve.8*
 %_mandir/man5/svnserve.conf.5*
 
