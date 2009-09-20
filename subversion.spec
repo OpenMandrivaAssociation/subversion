@@ -37,7 +37,7 @@
 
 Name: subversion
 Version: 1.6.5
-Release: %mkrel 2
+Release: %mkrel 3
 Epoch: 2
 Summary: A Concurrent Versioning System
 License: BSD CC2.0
@@ -134,6 +134,7 @@ of things you want %name-repos.
     # Already included in vim-common on 9.2 and newer.
     %_datadir/vim/syntax/svn.vim
 %endif
+%_sysconfdir/bash_completion.d/subversion
 
 #--------------------------------------------------------------------------
 
@@ -774,6 +775,10 @@ install -m 755 contrib/client-side/svn-log.pl %buildroot%_bindir
 (cd  %buildroot/%_bindir; ln -sf  svn-log.pl svn-log)
 install -m 755 tools/client-side/showchange.pl %buildroot%_bindir
 (cd  %buildroot/%_bindir; ln -sf  showchange.pl showchange)
+
+install -d -m 755 %buildroot%_sysconfdir/bash_completion.d
+install -m 644 tools/client-side/bash_completion \
+    %buildroot%_sysconfdir/bash_completion.d/subversion
 
 # Global configs
 install -d -m 755 %buildroot%_sysconfdir/subversion
