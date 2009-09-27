@@ -35,9 +35,13 @@
 %define py_platsitedir %{py_sitedir}
 %endif
 
+%ifarch %mips %arm
+%define build_java 0
+%endif
+
 Name: subversion
 Version: 1.6.5
-Release: %mkrel 3
+Release: %mkrel 4
 Epoch: 2
 Summary: A Concurrent Versioning System
 License: BSD CC2.0
