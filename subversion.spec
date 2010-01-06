@@ -2,6 +2,7 @@
 
 %define apache_version 2.2.0
 %define libsvn %mklibname svn 0
+%define libsvngnomekeyring %mklibname svn-gnome-keyring 0
 
 # Java requires devel symlinks in non-devel packages due to design
 # (System.loadLibrary). Do not add -devel dependencies.
@@ -18,6 +19,9 @@
 
 %define build_perl 1
 %{?_without_perl: %{expand: %%global build_perl 0}}
+
+%define build_gnome_keyring 1
+%{?_without_gnome_keyring: %{expand: %%global build_gnome_keyring 0}}
 
 %define build_test 0
 %{?_with_test: %{expand: %%global build_test 1}}
@@ -41,7 +45,7 @@
 
 Name: subversion
 Version: 1.6.6
-Release: %mkrel 2
+Release: %mkrel 3
 Epoch: 2
 Summary: A Concurrent Versioning System
 License: BSD CC2.0
@@ -183,6 +187,36 @@ Conflicts: subversion < 2:1.3.0-2mdk
 
 %description -n %libsvn
 Subversion common libraries
+
+%if %{build_gnome_keyring}
+
+%package -n %libsvngnomekeyring
+Summary: gnome-keyring support for svn
+Group: System/Libraries
+Conflicts: subversion < 2:1.3.0-2mdk
+%if %mdvver < 201010
+BuildRequires:  gnome-keyring-devel >= 2.26.1
+%else
+BuildRequires:  libgnome-keyring-devel
+%endif
+BuildRequires:  dbus-devel >= 1.2.4.4permissive
+Requires: gnome-keyring >= 2.26.1
+
+%description -n %libsvngnomekeyring
+Subversion libraries that allow interaction with the gnome-keyring daemon
+
+%files -n %libsvngnomekeyring
+%defattr(-,root,root)
+# list all ra libs to make sure we don't miss any
+# in a bogus build
+%_libdir/libsvn_auth_gnome_keyring-1.so.0*
+
+%if %mdkversion < 200900
+%post -n %libsvngnomekeyring -p /sbin/ldconfig
+%postun -n %libsvngnomekeyring -p /sbin/ldconfig
+%endif
+%endif
+
 
 %if %mdkversion < 200900
 %post -n %libsvn -p /sbin/ldconfig
@@ -629,6 +663,9 @@ export JAVADIR=%{_jvmdir}/java
 %if %{build_java}
    --with-jdk=%{java_home} \
    --with-junit=%{_javadir}/junit.jar \
+%endif
+%if %{build_gnome_keyring}
+   --with-gnome-keyring \
 %endif
    --enable-shared \
    --with-serf=%{_prefix} \
