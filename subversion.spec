@@ -57,8 +57,9 @@ Source3: %mod_authz_conf
 Source5: %name-1.3.0-global-config
 Source6: %name-1.3.0-global-servers
 Source7: http://svnbook.red-bean.com/nightly/en/svn-book-html-chunk.tar.bz2
-Patch0: subversion-1.5.0-underlink.patch
+Patch0: subversion-1.6.11-underlink.patch
 # http://www.rz.uni-karlsruhe.de/~rz41/source/Patches/subversion-1.4.3/hook-scripts-patch
+Patch1: subversion-1.6.0-deplibs.patch
 Patch4: subversion-hook-script_pathfix.diff
 Patch5: subversion-propchange-email.diff
 Patch6: subversion-1.5.5-format_not_a_string_literal_and_no_format_arguments.diff
@@ -615,6 +616,7 @@ fi
 %prep
 %setup -q -a 7
 %patch0 -p1 -b .underlink
+%patch1 -p1
 #%patch4 -p0 -b .hook-script_pathfix
 # it was removed after 1.3.2 but still referenced in subversion/libsvn_repos/repos.c
 #%patch5 -p1 -b .propchange-email
@@ -631,6 +633,8 @@ chmod 644 BUGS CHANGES COMMITTERS COPYING HACKING INSTALL README
 # move latest svnbook snapshot as their target version
 mv svn-book-html-chunk svnbook-1.6
 
+./autogen.sh --release
+
 # lib64 fixes
 perl -pi -e "s|\\$serf_prefix/lib\b|\\$serf_prefix/%{_lib}|g" build/ac-macros/serf.m4 configure*
 
@@ -641,13 +645,10 @@ perl -pi -e "s|\\$serf_prefix/lib\b|\\$serf_prefix/%{_lib}|g" build/ac-macros/se
 export JAVADIR=%{_jvmdir}/java
 %endif
 
-./configure \
-   --prefix=%{_prefix} \
-   --sysconfdir=%_sysconfdir \
-   --datadir=%_datadir \
-   --libdir=%_libdir \
+%define _disable_ld_no_undefined 1
+
+%configure2_5x \
    --localstatedir=/var/lib \
-   --mandir=%_mandir \
    --with-apr_memcache=%{_prefix} \
    --with-apxs=%{_sbindir}/apxs \
    --with-apache-libexecdir=%{_libdir}/apache-extramodules \
