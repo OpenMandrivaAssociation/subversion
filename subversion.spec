@@ -3,6 +3,7 @@
 %define apache_version 2.2.0
 %define libsvn %mklibname svn 0
 %define libsvngnomekeyring %mklibname svn-gnome-keyring 0
+%define libsvnkwallet %mklibname svn-kwallet 0
 
 # Java requires devel symlinks in non-devel packages due to design
 # (System.loadLibrary). Do not add -devel dependencies.
@@ -22,6 +23,9 @@
 
 %define build_gnome_keyring 1
 %{?_without_gnome_keyring: %{expand: %%global build_gnome_keyring 0}}
+
+%define build_kwallet 1
+%{?_without_kwallet: %{expand: %%global build_kwallet 0}}
 
 %define build_test 0
 %{?_with_test: %{expand: %%global build_test 1}}
@@ -45,7 +49,7 @@
 
 Name: subversion
 Version: 1.6.11
-Release: %mkrel 1
+Release: %mkrel 2
 Epoch: 2
 Summary: A Concurrent Versioning System
 License: BSD CC2.0
@@ -218,6 +222,29 @@ Subversion libraries that allow interaction with the gnome-keyring daemon
 %endif
 %endif
 
+%if %{build_kwallet}
+
+%package -n %libsvnkwallet
+Summary: kwallet support for svn
+Group: System/Libraries
+BuildRequires:  kdelibs4-devel
+BuildRequires:  dbus-devel >= 1.2.4.4permissive
+Requires: kwallet
+
+%description -n %libsvnkwallet
+Subversion libraries that allow interaction with the kwallet daemon.
+
+%files -n %libsvnkwallet
+%defattr(-,root,root)
+# list all ra libs to make sure we don't miss any
+# in a bogus build
+%_libdir/libsvn_auth_kwallet-1.so.0*
+
+%if %mdkversion < 200900
+%post -n %libsvnkwallet -p /sbin/ldconfig
+%postun -n %libsvnkwallet -p /sbin/ldconfig
+%endif
+%endif
 
 %if %mdkversion < 200900
 %post -n %libsvn -p /sbin/ldconfig
@@ -667,6 +694,9 @@ export JAVADIR=%{_jvmdir}/java
 %endif
 %if %{build_gnome_keyring}
    --with-gnome-keyring \
+%endif
+%if %build_kwallet
+   --with-kwallet \
 %endif
    --enable-shared \
    --with-serf=%{_prefix} \
