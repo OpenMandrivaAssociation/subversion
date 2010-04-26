@@ -54,7 +54,7 @@ Epoch: 2
 Summary: A Concurrent Versioning System
 License: BSD CC2.0
 Group: Development/Other
-URL: http://subversion.tigris.org
+URL: http://subversion.apache.org/
 Source0: http://subversion.tigris.org/tarballs/%name-%version.tar.bz2
 Source2: %mod_dav_conf
 Source3: %mod_authz_conf
