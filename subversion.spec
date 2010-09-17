@@ -49,7 +49,7 @@
 
 Name: subversion
 Version: 1.6.12
-Release: %mkrel 3
+Release: %mkrel 4
 Epoch: 2
 Summary: A Concurrent Versioning System
 License: BSD CC2.0
@@ -525,6 +525,12 @@ Requires: %libsvn = %{epoch}:%version-%release
 Requires: neon-devel >= 0.25.0
 %else
 Requires: neon-devel
+%endif
+%if %{build_gnome_keyring}
+Requires: %libsvngnomekeyring = %{epoch}:%version-%release
+%endif
+%if %{build_kwallet}
+Requires: %libsvnkwallet = %{epoch}:%version-%release
 %endif
 
 %description devel
