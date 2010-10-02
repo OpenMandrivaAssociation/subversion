@@ -56,8 +56,8 @@ License: BSD CC2.0
 Group: Development/Other
 URL: http://subversion.apache.org/
 Source0: http://subversion.tigris.org/tarballs/%name-%version.tar.bz2
-Source2: %mod_dav_conf
-Source3: %mod_authz_conf
+Source2: 46_mod_dav_svn.conf
+Source3: 47_mod_authz_svn.conf
 Source5: %name-1.3.0-global-config
 Source6: %name-1.3.0-global-servers
 Source7: http://svnbook.red-bean.com/nightly/en/svn-book-html-chunk.tar.bz2
