@@ -411,7 +411,6 @@ library functions within ruby scripts.
 %files -n ruby-svn
 %defattr(-,root,root)
 %ruby_sitearchdir/svn
-%exclude %ruby_sitearchdir/*/*/*.la
 %ruby_sitelibdir/*/*.rb
 %_libdir/libsvn_swig_ruby*.so.*
 
@@ -947,6 +946,9 @@ find %buildroot -name "perllocal.pod" | xargs rm -f
 
 # fix libtool files perms
 chmod 644 %buildroot%_libdir/*.la
+
+# delete ruby .la files manually
+rm -f %{buildroot}%ruby_sitearchdir/*/*/*.la
 
 %clean
 rm -rf %buildroot
