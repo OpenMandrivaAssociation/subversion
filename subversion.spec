@@ -48,14 +48,15 @@
 %endif
 
 Name: subversion
-Version: 1.6.13
-Release: %mkrel 4
+Version: 1.6.15
+Release: %mkrel 1
 Epoch: 2
 Summary: A Concurrent Versioning System
 License: BSD CC2.0
 Group: Development/Other
 URL: http://subversion.apache.org/
 Source0: http://subversion.tigris.org/tarballs/%name-%version.tar.bz2
+Source1: http://subversion.tigris.org/tarballs/%name-%version.tar.bz2.asc
 Source2: 46_mod_dav_svn.conf
 Source3: 47_mod_authz_svn.conf
 Source5: %name-1.3.0-global-config
