@@ -49,7 +49,7 @@
 
 Name: subversion
 Version: 1.6.16
-Release: %mkrel 1
+Release: %mkrel 2
 Epoch: 2
 Summary: A Concurrent Versioning System
 License: BSD CC2.0
@@ -68,13 +68,14 @@ Patch1: subversion-1.6.0-deplibs.patch
 Patch4: subversion-hook-script_pathfix.diff
 Patch5: subversion-propchange-email.diff
 Patch6: subversion-1.5.5-format_not_a_string_literal_and_no_format_arguments.diff
+Patch7: subversion-1.6.15-db5.patch
 BuildRequires:	autoconf >= 2.54
 BuildRequires:	libtool >= 1.4.2
 BuildRequires:	chrpath
 BuildRequires:	python >= 2.2
 BuildRequires:	texinfo
 BuildRequires:	info-install
-BuildRequires:	db4-devel
+BuildRequires:	db-devel
 %if %{mdkversion} < 200610
 BuildRequires:	neon-devel >= 0.25.0
 %else
@@ -654,6 +655,7 @@ fi
 # it was removed after 1.3.2 but still referenced in subversion/libsvn_repos/repos.c
 #%patch5 -p1 -b .propchange-email
 %patch6 -p1 -b .format_not_a_string_literal_and_no_format_arguments
+%patch7 -p1 -b .db5
 
 rm -rf neon apr apr-util db4
 
