@@ -49,7 +49,7 @@
 
 Name: subversion
 Version: 1.6.17
-Release: %mkrel 2
+Release: %mkrel 3
 Epoch: 2
 Summary: A Concurrent Versioning System
 License: BSD CC2.0
@@ -86,7 +86,7 @@ BuildRequires:	apr-devel >= 1:1.3.0
 BuildRequires:	apr-util-devel >= 1.3.0
 BuildRequires:	libxslt-proc
 BuildRequires:	docbook-style-xsl
-BuildRequires:	serf-devel >= 0.3.0
+BuildRequires:	serf-devel >= 1.0.0
 BuildRequires:	sqlite3-devel >= 3.4.0
 # Swig is runtime only
 BuildRequires:	swig >= 1.3.27
