@@ -69,6 +69,7 @@ Patch4: subversion-hook-script_pathfix.diff
 Patch5: subversion-propchange-email.diff
 Patch6: subversion-1.5.5-format_not_a_string_literal_and_no_format_arguments.diff
 Patch7: subversion-1.6.15-db5.patch
+Patch8: subversion-1.6.17-serf-1.diff
 BuildRequires:	autoconf >= 2.54
 BuildRequires:	libtool >= 1.4.2
 BuildRequires:	chrpath
@@ -656,6 +657,7 @@ fi
 #%patch5 -p1 -b .propchange-email
 %patch6 -p1 -b .format_not_a_string_literal_and_no_format_arguments
 %patch7 -p1 -b .db5
+%patch8 -p0 -b .serf-1
 
 rm -rf neon apr apr-util db4
 
