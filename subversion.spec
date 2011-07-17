@@ -87,7 +87,7 @@ BuildRequires:	apr-devel >= 1:1.3.0
 BuildRequires:	apr-util-devel >= 1.3.0
 BuildRequires:	libxslt-proc
 BuildRequires:	docbook-style-xsl
-BuildRequires:	serf-devel >= 1.0.0
+BuildRequires:	serf-devel == 0.7.2
 BuildRequires:	sqlite3-devel >= 3.4.0
 # Swig is runtime only
 BuildRequires:	swig >= 1.3.27
@@ -657,7 +657,7 @@ fi
 #%patch5 -p1 -b .propchange-email
 %patch6 -p1 -b .format_not_a_string_literal_and_no_format_arguments
 %patch7 -p1 -b .db5
-%patch8 -p0 -b .serf-1
+#%#patch8 -p0 -b .serf-1
 
 rm -rf neon apr apr-util db4
 
