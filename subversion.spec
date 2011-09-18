@@ -48,28 +48,21 @@
 %endif
 
 Name: subversion
-Version: 1.6.17
-Release: %mkrel 4
+Version: 1.7.0
+Release: %mkrel 0.0.rc3.1
 Epoch: 2
 Summary: A Concurrent Versioning System
 License: BSD CC2.0
 Group: Development/Other
 URL: http://subversion.apache.org/
-Source0: http://subversion.tigris.org/tarballs/%name-%version.tar.bz2
-Source1: http://subversion.tigris.org/tarballs/%name-%version.tar.bz2.asc
+#Source0: http://subversion.tigris.org/tarballs/%name-%version.tar.bz2
+#Source1: http://subversion.tigris.org/tarballs/%name-%version.tar.bz2.asc
+Source0: http://apache.mirrors.spacedump.net/subversion/subversion-1.7.0-rc3.tar.gz
 Source2: 46_mod_dav_svn.conf
 Source3: 47_mod_authz_svn.conf
 Source5: %name-1.3.0-global-config
 Source6: %name-1.3.0-global-servers
 Source7: http://svnbook.red-bean.com/nightly/en/svn-book-html-chunk.tar.bz2
-Patch0: subversion-1.6.11-underlink.patch
-# http://www.rz.uni-karlsruhe.de/~rz41/source/Patches/subversion-1.4.3/hook-scripts-patch
-Patch1: subversion-1.6.0-deplibs.patch
-Patch4: subversion-hook-script_pathfix.diff
-Patch5: subversion-propchange-email.diff
-Patch6: subversion-1.5.5-format_not_a_string_literal_and_no_format_arguments.diff
-Patch7: subversion-1.6.15-db5.patch
-Patch8: subversion-1.6.17-serf-1.diff
 BuildRequires:	autoconf >= 2.54
 BuildRequires:	libtool >= 1.4.2
 BuildRequires:	chrpath
@@ -87,8 +80,9 @@ BuildRequires:	apr-devel >= 1:1.3.0
 BuildRequires:	apr-util-devel >= 1.3.0
 BuildRequires:	libxslt-proc
 BuildRequires:	docbook-style-xsl
-BuildRequires:	serf-devel == 0.7.2
-BuildRequires:	sqlite3-devel >= 3.4.0
+BuildRequires:	sqlite3-devel >= 3.6.18
+BuildRequires:	krb5-devel
+BuildRequires:	file-devel
 # Swig is runtime only
 BuildRequires:	swig >= 1.3.27
 %if %mdkversion >= 1020
@@ -135,21 +129,12 @@ of things you want %name-repos.
 %defattr(-,root,root)
 %_bindir/svn
 %_bindir/svnversion
-%_bindir/showchange*
-%_bindir/search-svnlog*
-%_bindir/svn_all_diffs*
-%_bindir/svn_load_dirs*
-%_bindir/svn-log*
 %_bindir/svnlook
 %_mandir/man1/svn.*
 %_mandir/man1/svnlook.*
 %_mandir/man1/svnversion.*
 %_mandir/man1/svnsync.*
 %dir %_datadir/subversion-%{version}
-%if %mdkversion <= 910
-    # Already included in vim-common on 9.2 and newer.
-    %_datadir/vim/syntax/svn.vim
-%endif
 %_sysconfdir/bash_completion.d/subversion
 
 #--------------------------------------------------------------------------
@@ -264,7 +249,6 @@ Subversion libraries that allow interaction with the kwallet daemon.
 %_libdir/libsvn_ra_local-1.so.*
 %_libdir/libsvn_ra_svn-1.so.*
 %_libdir/libsvn_ra_neon-1.so.*
-%_libdir/libsvn_ra_serf-*.so.*
 %_libdir/libsvn_client*so.*
 %_libdir/libsvn_wc-*so.*
 %_libdir/libsvn_delta-*so.*
@@ -326,8 +310,7 @@ fi
 
 %files server
 %defattr(-,root,root)
-%doc BUGS CHANGES COMMITTERS COPYING HACKING INSTALL README
-%doc notes/repos_upgrade_HOWTO
+%doc BUGS CHANGES COMMITTERS INSTALL
 %_bindir/svnserve
 %config(noreplace) %_sysconfdir/xinetd.d/svnserve
 /var/lib/svn
@@ -364,9 +347,11 @@ find it at http://cvs2svn.tigris.org/
 %_bindir/svnadmin
 %_bindir/svnsync
 %_bindir/svndumpfilter
+%_bindir/svnrdump
 %_datadir/%name-%version/repo-tools
 %_mandir/man1/svnadmin.1*
 %_mandir/man1/svndumpfilter.1*
+%_mandir/man1/svnrdump.1*
 
 #--------------------------------------------------------------------------
 
@@ -608,72 +593,31 @@ fi
 %attr(0644,root,root) %config(noreplace) %_sysconfdir/httpd/modules.d/%{mod_authz_conf}
 %attr(0755,root,root) %_libdir/apache-extramodules/%{mod_dav_so}
 %attr(0755,root,root) %_libdir/apache-extramodules/%{mod_authz_so}
-%attr(0644,root,root) %{_var}/www/icons/subversion.png
-
-%package -n	apache-mod_dontdothat
-Summary:	An Apache module that allows you to block specific types of Subversion requests
-Group:		System/Servers
-Requires(pre): rpm-helper
-Requires(postun): rpm-helper
-Requires(pre):	apache-conf >= %{apache_version}
-Requires(pre):	apache >= %{apache_version}
-Requires(pre):	apache-mod_dav_svn = %{epoch}:%{version}
-
-%description -n apache-mod_dontdothat
-mod_dontdothat is an Apache module that allows you to block specific types
-of Subversion requests.  Specifically, it's designed to keep users from doing
-things that are particularly hard on the server, like checking out the root
-of the tree, or the tags or branches directories.  It works by sticking an
-input filter in front of all REPORT requests and looking for dangerous types
-of requests.  If it finds any, it returns a 403 Forbidden error.
-
-%post -n apache-mod_dontdothat
-if [ -f %{_var}/lock/subsys/httpd ]; then
-    %{_initrddir}/httpd restart 1>&2;
-fi
-
-%postun -n apache-mod_dontdothat
-if [ "$1" = "0" ]; then
-    if [ -f %{_var}/lock/subsys/httpd ]; then
-	%{_initrddir}/httpd restart 1>&2
-    fi
-fi
-
-%files -n apache-mod_dontdothat
-%defattr(-,root,root)
-%doc contrib/server-side/mod_dontdothat/README
-%attr(0644,root,root) %config(noreplace) %{_sysconfdir}/httpd/modules.d/48_mod_dontdothat.conf
-%attr(0644,root,root) %config(noreplace) %{_sysconfdir}/httpd/conf/dontdothat.conf
-%attr(0755,root,root) %{_libdir}/apache-extramodules/mod_dontdothat.so
-
-#--------------------------------------------------------------------------
 
 %prep
-%setup -q -a 7
-%patch0 -p1 -b .underlink
-%patch1 -p1
-#%patch4 -p0 -b .hook-script_pathfix
-# it was removed after 1.3.2 but still referenced in subversion/libsvn_repos/repos.c
-#%patch5 -p1 -b .propchange-email
-%patch6 -p1 -b .format_not_a_string_literal_and_no_format_arguments
-%patch7 -p1 -b .db5
-#%#patch8 -p0 -b .serf-1
 
-rm -rf neon apr apr-util db4
+%setup -q -n subversion-1.7.0-rc3 -a 7
 
 # fix shellbang lines, #111498
 perl -pi -e 's|/usr/bin/env perl|%{_bindir}/perl|g' tools/hook-scripts/*.pl.in
 
 # fix file perms
-chmod 644 BUGS CHANGES COMMITTERS COPYING HACKING INSTALL README
+chmod 644 BUGS CHANGES COMMITTERS INSTALL README
 
 # move latest svnbook snapshot as their target version
-mv svn-book-html-chunk svnbook-1.6
+mv svn-book-html-chunk svnbook-1.7
 
 ./autogen.sh --release
 
 # lib64 fixes
-perl -pi -e "s|\\$serf_prefix/lib\b|\\$serf_prefix/%{_lib}|g" build/ac-macros/serf.m4 configure*
+perl -pi -e "s|/lib\b|/%{_lib}|g" \
+    build/ac-macros/serf.m4 \
+    build/ac-macros/apr_memcache.m4 \
+    build/ac-macros/berkeley-db.m4 \
+    build/ac-macros/sasl.m4 \
+    build/ac-macros/sqlite.m4 \
+    build/ac-macros/zlib.m4 \
+    configure*
 
 %build
 %serverbuild
@@ -681,8 +625,6 @@ perl -pi -e "s|\\$serf_prefix/lib\b|\\$serf_prefix/%{_lib}|g" build/ac-macros/se
 %if %{build_java}
 export JAVADIR=%{_jvmdir}/java
 %endif
-
-%define _disable_ld_no_undefined 1
 
 %configure2_5x \
    --localstatedir=/var/lib \
@@ -694,6 +636,7 @@ export JAVADIR=%{_jvmdir}/java
    --disable-mod-activation \
    --with-swig=%{_prefix} \
    --disable-static \
+   --enable-disallowing-of-undefined-references \
 %if %{with_debug}
    --enable-maintainer-mode \
    --enable-debug \
@@ -709,11 +652,12 @@ export JAVADIR=%{_jvmdir}/java
    --with-kwallet \
 %endif
    --enable-shared \
-   --with-serf=%{_prefix} \
+   --with-gssapi=%{_prefix} \
+   --with-libmagic=%{_prefix} \
    --disable-neon-version-check \
    --with-sqlite=%{_prefix}
 
-%{make} all
+%make all
 
 %if %{build_python}
 make swig-py swig_pydir=%{py_platsitedir}/libsvn swig_pydir_extra=%{py_sitedir}/svn
@@ -733,11 +677,6 @@ make swig-rb
 %if %{build_java}
 make javahl
 %endif
-
-# compile the extra module as well...
-%{_sbindir}/apxs -c -Isubversion/include -Isubversion \
-    contrib/server-side/mod_dontdothat/mod_dontdothat.c \
-    subversion/libsvn_subr/libsvn_subr-1.la
 
 %install
 rm -rf %buildroot
@@ -798,65 +737,9 @@ install -d %buildroot%_sysconfdir/httpd/modules.d
 cat %{SOURCE2} > %buildroot%_sysconfdir/httpd/modules.d/%{mod_dav_conf}
 cat %{SOURCE3} > %buildroot%_sysconfdir/httpd/modules.d/%{mod_authz_conf}
 
-# install the extra module
-install -m0755 contrib/server-side/mod_dontdothat/.libs/mod_dontdothat.so %{buildroot}%{_libdir}/apache-extramodules/
-
-# cleanup
-rm -f %{buildroot}%{_libdir}/apache-extramodules/*.*a
-
-cat > %{buildroot}%{_sysconfdir}/httpd/modules.d/48_mod_dontdothat.conf << EOF
-<IfDefine HAVE_DONTDOTHAT>
-    <IfModule !mod_dontdothat.c>
-	LoadModule dontdothat_module    extramodules/mod_dontdothat.so
-    </IfModule>
-</IfDefine>
-
-<IfModule mod_dontdothat.c>
-
-    <Location /svn>
-        DAV svn
-        SVNParentPath /var/lib/svn/repositories
-        DontDoThatConfigFile %{_sysconfdir}/httpd/conf/dontdothat.conf
-    </Location>
-
-</IfModule>
-EOF
-
-install -d %{buildroot}%{_sysconfdir}/httpd/conf
-cat > %{buildroot}%{_sysconfdir}/httpd/conf/dontdothat.conf << EOF
-[recursive-actions]
-/*/trunk = allow
-/ = deny
-/* = deny
-/*/tags = deny
-/*/branches = deny
-/*/* = deny
-/*/*/tags = deny
-/*/*/branches = deny
-EOF
-
 ######################
 ###  client-tools  ###
 ######################
-
-# vim syntax hilighting
-%if %mdkversion <= 910
-    # Already included in vim-common on 9.2 and newer.
-    install -d -m 755 %buildroot/%_datadir/vim/syntax
-    install -m 644 contrib/client-side/svn.vim %buildroot/%_datadir/vim/syntax
-%endif
-
-# various commands
-install -m 755 contrib/client-side/search-svnlog.pl %buildroot%_bindir
-(cd  %buildroot/%_bindir; ln -sf  search-svnlog.pl search-svnlog)
-install -m 755 contrib/client-side/svn_all_diffs.pl %buildroot%_bindir
-(cd  %buildroot/%_bindir; ln -sf  svn_all_diffs.pl svn_all_diffs)
-install -m 755 contrib/client-side/svn_load_dirs/svn_load_dirs.pl %buildroot%_bindir
-(cd  %buildroot/%_bindir; ln -sf  svn_load_dirs.pl svn_load_dirs)
-install -m 755 contrib/client-side/svn-log.pl %buildroot%_bindir
-(cd  %buildroot/%_bindir; ln -sf  svn-log.pl svn-log)
-install -m 755 tools/client-side/showchange.pl %buildroot%_bindir
-(cd  %buildroot/%_bindir; ln -sf  showchange.pl showchange)
 
 install -d -m 755 %buildroot%_sysconfdir/bash_completion.d
 install -m 644 tools/client-side/bash_completion \
@@ -884,27 +767,17 @@ install -m 644 svnperms.conf.example %buildroot/%_datadir/%name-%version/repo-to
 install -m 755 svnperms.py %buildroot/%_datadir/%name-%version/repo-tools/hook-scripts
 install -m 755 mailer/mailer.py %buildroot/%_datadir/%name-%version/repo-tools/hook-scripts
 install -m 644 mailer/mailer.conf.example %buildroot/%_datadir/%name-%version/repo-tools/hook-scripts
-install -m 644 README %buildroot/%_datadir/%name-%version/repo-tools/hook-scripts
-popd
-
-pushd contrib/hook-scripts
-install -m 755 commit-email.pl %buildroot/%_datadir/%name-%version/repo-tools/hook-scripts
+install -m 755 commit-email.rb %buildroot/%_datadir/%name-%version/repo-tools/hook-scripts
+install -m 755 log-police.py %buildroot/%_datadir/%name-%version/repo-tools/hook-scripts
+install -m 755 svn2feed.py %buildroot/%_datadir/%name-%version/repo-tools/hook-scripts
+install -m 755 validate-extensions.py %buildroot/%_datadir/%name-%version/repo-tools/hook-scripts
+install -m 755 verify-po.py %buildroot/%_datadir/%name-%version/repo-tools/hook-scripts
 popd
 
 #xslt
 install -d -m755 %buildroot%_datadir/%name-%version/repo-tools/xslt
 install -m 644 tools/xslt/svnindex.css %buildroot%_datadir/%name-%version/repo-tools/xslt
 install -m 644 tools/xslt/svnindex.xsl %buildroot%_datadir/%name-%version/repo-tools/xslt
-
-#cgi
-install -d -m755 %buildroot%_datadir/%name-%version/repo-tools/cgi
-install -m 755 contrib/cgi/mirror_dir_through_svn.cgi %buildroot%_datadir/%name-%version/repo-tools/cgi
-install -m 644 contrib/cgi/mirror_dir_through_svn.README %buildroot%_datadir/%name-%version/repo-tools/cgi
-install -m 755 contrib/cgi/tweak-log.cgi %buildroot%_datadir/%name-%version/repo-tools/cgi
-
-# install a nice icon for web usage
-install -d %buildroot/var/www/icons
-install -m644 notes/logo/256-colour/subversion_logo_hor-237x32.png %buildroot/var/www/icons/subversion.png
 
 # fix a missing file...
 ln -sf libsvn_diff-1.so.0.0.0 %buildroot%_libdir/libsvn_diff.so
