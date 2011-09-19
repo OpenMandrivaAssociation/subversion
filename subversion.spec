@@ -66,6 +66,7 @@ Source3: 47_mod_authz_svn.conf
 Source5: %name-1.3.0-global-config
 Source6: %name-1.3.0-global-servers
 Source7: http://svnbook.red-bean.com/nightly/en/svn-book-html-chunk.tar.bz2
+Patch0: subversion-1.7.0-rc3-no_tests.diff
 BuildRequires:	autoconf >= 2.54
 BuildRequires:	libtool >= 1.4.2
 BuildRequires:	chrpath
@@ -600,6 +601,9 @@ fi
 %prep
 
 %setup -q -n subversion-1.7.0-rc3 -a 7
+
+# don't build the tests as we're not running make test since many many years...
+%patch0 -p0
 
 # fix shellbang lines, #111498
 perl -pi -e 's|/usr/bin/env perl|%{_bindir}/perl|g' tools/hook-scripts/*.pl.in
