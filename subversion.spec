@@ -1,3 +1,6 @@
+# despite using 
+%define _disable_ld_no_undefined 1
+
 %define _requires_exceptions devel(libneon
 
 %define apache_version 2.2.0
@@ -636,7 +639,6 @@ export JAVADIR=%{_jvmdir}/java
    --disable-mod-activation \
    --with-swig=%{_prefix} \
    --disable-static \
-   --enable-disallowing-of-undefined-references \
 %if %{with_debug}
    --enable-maintainer-mode \
    --enable-debug \
