@@ -36,23 +36,13 @@
 %define with_debug 0
 %{?_with_debug: %{expand: %%global with_debug 1}}
 
-%if %mdkversion <= 200700
-%define build_java 0
-%define build_ruby 0
-
-# play safe work around (misc)
-%define py_purelibdir %{py_libdir}
-%define py_platlibdir %{py_libdir}
-%define py_platsitedir %{py_sitedir}
-%endif
-
 %ifarch %mips %arm
 %define build_java 0
 %endif
 
 Name: subversion
 Version: 1.7.0
-Release: %mkrel 0.0.rc3.1
+Release: %mkrel 0.0.rc4.1
 Epoch: 2
 Summary: A Concurrent Versioning System
 License: BSD CC2.0
@@ -60,7 +50,7 @@ Group: Development/Other
 URL: http://subversion.apache.org/
 #Source0: http://subversion.tigris.org/tarballs/%name-%version.tar.bz2
 #Source1: http://subversion.tigris.org/tarballs/%name-%version.tar.bz2.asc
-Source0: http://apache.mirrors.spacedump.net/subversion/subversion-1.7.0-rc3.tar.gz
+Source0: http://apache.mirrors.spacedump.net/subversion/subversion-1.7.0-rc4.tar.gz
 Source2: 46_mod_dav_svn.conf
 Source3: 47_mod_authz_svn.conf
 Source5: %name-1.3.0-global-config
@@ -74,11 +64,7 @@ BuildRequires:	python >= 2.2
 BuildRequires:	texinfo
 BuildRequires:	info-install
 BuildRequires:	db-devel
-%if %{mdkversion} < 200610
-BuildRequires:	neon-devel >= 0.25.0
-%else
 BuildRequires:	neon-devel
-%endif
 BuildRequires:	apache-devel >=  %{apache_version}
 BuildRequires:	apr-devel >= 1:1.3.0
 BuildRequires:	apr-util-devel >= 1.3.0
@@ -89,9 +75,6 @@ BuildRequires:	krb5-devel
 BuildRequires:	file-devel
 # Swig is runtime only
 BuildRequires:	swig >= 1.3.27
-%if %mdkversion >= 1020
-BuildRequires:	multiarch-utils >= 1.0.3
-%endif
 # Obsoletes - kill all non sys build library packages
 # Just server and client need some libraries and we need just one
 # main ( client ) and one server package, as well bindings and doc packages
@@ -112,7 +95,7 @@ Conflicts: %{libsvn} < 2:1.3.0-2mdk
 Provides: %name-ra-method = %{epoch}:%version-%{release}
 Provides: %name-client-tools = %{epoch}:%version-%{release}
 Provides: svn = %{epoch}:%{version}
-Requires: %{libsvn} = %{epoch}:%{version}
+Requires:	%{libsvn} >= %{epoch}:%{version}
 Buildroot:	%{_tmppath}/%{name}-%{version}-%{release}-buildroot
 
 %description
@@ -208,10 +191,6 @@ Subversion libraries that allow interaction with the gnome-keyring daemon
 # in a bogus build
 %_libdir/libsvn_auth_gnome_keyring-1.so.0*
 
-%if %mdkversion < 200900
-%post -n %libsvngnomekeyring -p /sbin/ldconfig
-%postun -n %libsvngnomekeyring -p /sbin/ldconfig
-%endif
 %endif
 
 %if %{build_kwallet}
@@ -232,17 +211,6 @@ Subversion libraries that allow interaction with the kwallet daemon.
 # in a bogus build
 %_libdir/libsvn_auth_kwallet-1.so.0*
 
-%if %mdkversion < 200900
-%post -n %libsvnkwallet -p /sbin/ldconfig
-%postun -n %libsvnkwallet -p /sbin/ldconfig
-%endif
-%endif
-
-%if %mdkversion < 200900
-%post -n %libsvn -p /sbin/ldconfig
-%endif
-%if %mdkversion < 200900
-%postun -n %libsvn -p /sbin/ldconfig
 %endif
 
 %files -n %libsvn
@@ -267,14 +235,13 @@ Subversion libraries that allow interaction with the kwallet daemon.
 %package	server
 Summary:	Subversion Server
 Group:		System/Servers
-Requires: %name = %{epoch}:%version-%{release}
+Requires:	%name >= %{epoch}:%version-%{release}
 Requires(pre):  rpm-helper
 Requires(postun): rpm-helper
 Requires(post): sed
 # soname didn't change between 1.3.x and 1.4.x, but we
 # need the right one...
-Requires: %{libsvn} = %{epoch}:%{version}
-BuildRoot: %{_tmppath}/%name-%version
+Requires:	%{libsvn} >= %{epoch}:%{version}
 
 %description server
 This package contains a myriad of tools for subversion server
@@ -294,9 +261,6 @@ find it at http://cvs2svn.tigris.org/
 %post server
 # Libraries for REPOS ( Repository ) and FS ( filesystem backends ) are in
 # server now, so we need a ldconfig
-%if %mdkversion < 200900
-/sbin/ldconfig
-%endif
 # fix svn entries in /etc/services
 if ! grep -qE '^svn[[:space:]]+3690/(tcp|udp)[[:space:]]+svnserve' %{_sysconfdir}/services; then
 	# cleanup
@@ -308,9 +272,6 @@ fi
 
 %postun server
 %_postun_userdel svn
-%if %mdkversion < 200900
-/sbin/ldconfig
-%endif
 
 %files server
 %defattr(-,root,root)
@@ -326,12 +287,12 @@ fi
 %package tools
 Summary:	Subversion Repo/Server Tools
 Group: Development/Other
-Requires: %name = %{epoch}:%version-%{release}
+Requires: %name >= %{epoch}:%version-%{release}
 Conflicts: %name-server < 1.2.3-4mdk
 Obsoletes: %name-repo-tools < 1.2.3-4mdk
 # soname didn't change between 1.3.x and 1.4.x, but we
 # need the right one...
-Requires: %{libsvn} = %{epoch}:%{version}
+Requires:	%{libsvn} >= %{epoch}:%{version}
 
 %description tools
 This package contains a myriad of tools for subversion server
@@ -369,7 +330,7 @@ Provides: python-subversion = %version-%{release}
 Requires: python
 # soname didn't change between 1.3.x and 1.4.x, but we
 # need the right one...
-Requires: %{libsvn} = %{epoch}:%{version}
+Requires:	%{libsvn} >= %{epoch}:%{version}
 
 %description -n python-svn
 This package contains the files necessary to use the subversion
@@ -393,7 +354,7 @@ Summary:	Ruby bindings for Subversion
 Group: Development/Ruby
 BuildRequires: ruby-devel
 Requires: ruby
-Requires: %{libsvn} = %{epoch}:%{version}
+Requires:	%{libsvn} >= %{epoch}:%{version}
 Provides: ruby-subversion = %{epoch}:%version-%{release}
 
 %description -n	ruby-svn
@@ -436,16 +397,12 @@ Group:		Development/Java
 Obsoletes:      java-svn < %{epoch}:%{version}-%{release}
 Provides:       java-svn = %{epoch}:%{version}-%{release}
 Provides:	java-subversion = %{epoch}:%{version}-%{release}
-Requires:	%{name} = %{epoch}:%{version}-%{release}
-Requires: %{libsvn} = %{epoch}:%{version}-%{release}
-Requires: %{libsvnjavahl} = %{epoch}:%{version}-%{release}
+Requires:	%{name} >= %{epoch}:%{version}-%{release}
+Requires:	%{libsvn} >= %{epoch}:%{version}-%{release}
+Requires:	%{libsvnjavahl} >= %{epoch}:%{version}-%{release}
 BuildRequires:  java-devel
 BuildRequires:  ant
-%if %mdkversion >= 200810
-BuildRequires:  java-rpmbuild >= 1.7.3-10
-%else
 BuildRequires:  jpackage-utils >= 1.7.3-10
-%endif
 BuildRequires:  junit
 
 %description -n	svn-javahl
@@ -468,10 +425,10 @@ library functions from Java.
 Summary:	Perl bindings for Subversion
 Group:		Development/Perl
 BuildRequires: perl-devel
-Requires:	%name = %{epoch}:%version-%{release}
+Requires:	%name >= %{epoch}:%version-%{release}
 Obsoletes:	perl-svn
 Provides:	perl-svn = %{epoch}:%version-%{release}
-Requires: %{libsvn} = %{epoch}:%{version}
+Requires:	%{libsvn} >= %{epoch}:%{version}
 
 %description -n perl-SVN
 This package contains the files necessary to use the subversion
@@ -497,31 +454,27 @@ Provides: libsvn-devel = %{epoch}:%version-%{release}
 Obsoletes: libsubversion1_0-devel < 1.2.3-4mdk
 Obsoletes: libsubversion1_0-static-devel < 1.2.3-4mdk
 %if %{build_perl}
-Requires: perl-SVN = %{epoch}:%{version}
+Requires:	perl-SVN >= %{epoch}:%{version}
 Obsoletes: perl-SVN-devel < 2:1.5.2-2
 Provides: per-SVN-devel = %{epoch}:%{version}
 %endif
 %if %{build_perl}
-Requires: python-svn = %{epoch}:%{version}
+Requires:	python-svn >= %{epoch}:%{version}
 Obsoletes: python-svn-devel < 2:1.5.2-2
 Provides: python-svn-devel = %{epoch}:%{version}
 %endif
 %if %{build_ruby}
-Requires: ruby-svn = %{epoch}:%{version}
+Requires:	ruby-svn >= %{epoch}:%{version}
 Obsoletes: ruby-svn-devel < 2:1.5.2-2
 Provides: ruby-svn-devel = %{epoch}:%{version}
 %endif
-Requires: %libsvn = %{epoch}:%version-%release
-%if %{mdkversion} < 200610
-Requires: neon-devel >= 0.25.0
-%else
+Requires:	%libsvn >= %{epoch}:%version-%release
 Requires: neon-devel
-%endif
 %if %{build_gnome_keyring}
-Requires: %libsvngnomekeyring = %{epoch}:%version-%release
+Requires:	%libsvngnomekeyring >= %{epoch}:%version-%release
 %endif
 %if %{build_kwallet}
-Requires: %libsvnkwallet = %{epoch}:%version-%release
+Requires:	%libsvnkwallet >= %{epoch}:%version-%release
 %endif
 
 %description devel
@@ -552,7 +505,7 @@ subversion libraries.
 %package -n	apache-mod_dav_svn
 Summary:	Subversion server DSO module for apache
 Group:		System/Servers
-Requires: %name-tools = %{epoch}:%version-%{release}
+Requires:	%name-tools >= %{epoch}:%version-%{release}
 Requires(pre): rpm-helper
 Requires(postun): rpm-helper
 Requires(pre):	apache-conf >= %{apache_version}
@@ -560,7 +513,7 @@ Requires(pre):	apache >= %{apache_version}
 Requires(pre):	apache-mod_dav >= %{apache_version}
 # soname didn't change between 1.3.x and 1.4.x, but we
 # need the right one...
-Requires(pre): %{libsvn} = %{epoch}:%{version}
+Requires(pre): %{libsvn} >= %{epoch}:%{version}
 Obsoletes:	apache-mod_authz_svn
 
 %description -n apache-mod_dav_svn
@@ -600,7 +553,7 @@ fi
 
 %prep
 
-%setup -q -n subversion-1.7.0-rc3 -a 7
+%setup -q -n subversion-1.7.0-rc4 -a7
 
 # don't build the tests as we're not running make test since many many years...
 %patch0 -p0
@@ -688,20 +641,7 @@ make javahl
 rm -rf %buildroot
 
 %if %{build_test}
-echo "###########################################################################"
-echo "This can take quite some time to finish, so please be patient..."
-echo "Don't be too surprised it the tests takes 30 minutes on a dual xeon machine..."
-make LC_ALL=C LANG=C LD_LIBRARY_PATH="`pwd`/subversion/bindings/swig/perl/libsvn_swig_perl/.libs:`pwd`/subversion/bindings/swig/python/libsvn_swig_py/.libs:\
-`pwd`/subversion/bindings/swig/python/.libs:`pwd`/subversion/libsvn_ra_local/.libs:`pwd`/subversion/svnadmin/.libs:\
-`pwd`/subversion/tests/libsvn_ra_local/.libs:`pwd`/subversion/tests/libsvn_fs/.libs:`pwd`/subversion/tests/libsvn_wc/.libs:\
-`pwd`/subversion/tests/libsvn_fs_base/.libs:`pwd`/subversion/tests/libsvn_diff/.libs:`pwd`/subversion/tests/libsvn_subr/.libs:\
-`pwd`/subversion/tests/libsvn_delta/.libs:`pwd`/subversion/tests/libsvn_repos/.libs:`pwd`/subversion/tests/.libs:\
-`pwd`/subversion/svnserve/.libs:`pwd`/subversion/libsvn_fs/.libs:`pwd`/subversion/libsvn_ra/.libs:`pwd`/subversion/libsvn_wc/.libs:\
-`pwd`/subversion/mod_dav_svn/.libs:`pwd`/subversion/mod_authz_svn/.libs:`pwd`/subversion/svnlook/.libs:`pwd`/subversion/svndumpfilter/.libs:\
-`pwd`/subversion/libsvn_client/.libs:`pwd`/subversion/libsvn_fs_base/bdb/.libs:`pwd`/subversion/libsvn_fs_base/util/.libs:\
-`pwd`/subversion/libsvn_fs_base/.libs:`pwd`/subversion/libsvn_diff/.libs:`pwd`/subversion/libsvn_subr/.libs:`pwd`/subversion/svnversion/.libs:\
-`pwd`/subversion/libsvn_ra_dav/.libs:`pwd`/subversion/libsvn_ra_svn/.libs:`pwd`/subversion/libsvn_delta/.libs:`pwd`/subversion/libsvn_fs_fs/.libs:\
-`pwd`/subversion/libsvn_repos/.libs:`pwd`/subversion/clients/cmdline/.libs:$LD_LIBRARY_PATH" check
+make check
 %endif
 
 %makeinstall_std
