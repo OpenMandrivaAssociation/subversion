@@ -18,7 +18,7 @@
 %define build_ruby 1
 %{?_without_ruby: %{expand: %%global build_ruby 0}}
 
-%define build_java 1
+%define build_java 0
 %{?_with_java: %{expand: %%global build_java 1}}
 
 %define build_perl 1
