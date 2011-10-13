@@ -576,8 +576,6 @@ chmod 644 BUGS CHANGES COMMITTERS INSTALL README
 # move latest svnbook snapshot as their target version
 mv svn-book-html-chunk svnbook-1.7
 
-./autogen.sh --release
-
 # lib64 fixes
 perl -pi -e "s|/lib\b|/%{_lib}|g" \
     build/ac-macros/serf.m4 \
@@ -587,6 +585,8 @@ perl -pi -e "s|/lib\b|/%{_lib}|g" \
     build/ac-macros/sqlite.m4 \
     build/ac-macros/zlib.m4 \
     configure*
+
+./autogen.sh --release
 
 %build
 %serverbuild
