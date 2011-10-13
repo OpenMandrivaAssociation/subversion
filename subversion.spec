@@ -84,6 +84,10 @@ BuildRequires:	krb5-devel
 BuildRequires:	file-devel
 # Swig is runtime only
 BuildRequires:	swig >= 1.3.27
+# needs this despite build_ruby 0
+BuildRequires: ruby
+BuildRequires: ruby-devel
+BuildRequires: ruby-rdoc
 # Obsoletes - kill all non sys build library packages
 # Just server and client need some libraries and we need just one
 # main ( client ) and one server package, as well bindings and doc packages
@@ -361,9 +365,6 @@ library functions within python scripts.
 %package -n	ruby-svn
 Summary:	Ruby bindings for Subversion
 Group: Development/Ruby
-BuildRequires: ruby
-BuildRequires: ruby-devel
-BuildRequires: ruby-rdoc
 Requires: ruby
 Requires:	%{libsvn} >= %{epoch}:%{version}
 Provides: ruby-subversion = %{epoch}:%version-%{release}
