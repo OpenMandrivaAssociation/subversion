@@ -24,7 +24,7 @@
 %define build_python 1
 %{?_without_python: %{expand: %%global build_python 0}}
 
-%define build_ruby 1
+%define build_ruby 0
 %{?_without_ruby: %{expand: %%global build_ruby 0}}
 
 %define build_java 0
