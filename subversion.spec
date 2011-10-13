@@ -65,6 +65,7 @@ Source5: %name-1.3.0-global-config
 Source6: %name-1.3.0-global-servers
 Source7: http://svnbook.red-bean.com/nightly/en/svn-book-html-chunk.tar.bz2
 Patch0: subversion-1.7.0-rc3-no_tests.diff
+BuildRequires:	automake
 BuildRequires:	autoconf >= 2.54
 BuildRequires:	libtool >= 1.4.2
 BuildRequires:	chrpath
