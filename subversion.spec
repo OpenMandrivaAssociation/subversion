@@ -361,7 +361,9 @@ library functions within python scripts.
 %package -n	ruby-svn
 Summary:	Ruby bindings for Subversion
 Group: Development/Ruby
+BuildRequires: ruby
 BuildRequires: ruby-devel
+BuildRequires: ruby-rdoc
 Requires: ruby
 Requires:	%{libsvn} >= %{epoch}:%{version}
 Provides: ruby-subversion = %{epoch}:%version-%{release}
