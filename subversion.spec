@@ -1,3 +1,12 @@
+%if %mandriva_branch == Cooker
+# Cooker
+%define release %mkrel 1
+%else
+# Old distros
+%define subrel 1
+%define release %mkrel 0
+%endif
+
 # despite using 
 %define _disable_ld_no_undefined 1
 
@@ -42,15 +51,14 @@
 
 Name: subversion
 Version: 1.7.0
-Release: %mkrel 0.0.rc4.1
+Release: %{release}
 Epoch: 2
 Summary: A Concurrent Versioning System
 License: BSD CC2.0
 Group: Development/Other
 URL: http://subversion.apache.org/
-#Source0: http://subversion.tigris.org/tarballs/%name-%version.tar.bz2
-#Source1: http://subversion.tigris.org/tarballs/%name-%version.tar.bz2.asc
-Source0: http://apache.mirrors.spacedump.net/subversion/subversion-1.7.0-rc4.tar.gz
+Source0: http://subversion.tigris.org/tarballs/%name-%version.tar.bz2
+Source1: http://subversion.tigris.org/tarballs/%name-%version.tar.bz2.asc
 Source2: 46_mod_dav_svn.conf
 Source3: 47_mod_authz_svn.conf
 Source5: %name-1.3.0-global-config
@@ -553,7 +561,7 @@ fi
 
 %prep
 
-%setup -q -n subversion-1.7.0-rc4 -a7
+%setup -q -a7
 
 # don't build the tests as we're not running make test since many many years...
 %patch0 -p0
