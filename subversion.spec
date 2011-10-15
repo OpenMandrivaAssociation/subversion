@@ -1,6 +1,6 @@
 %if %mandriva_branch == Cooker
 # Cooker
-%define release %mkrel 1
+%define release %mkrel 2
 %else
 # Old distros
 %define subrel 1
@@ -24,7 +24,7 @@
 %define build_python 1
 %{?_without_python: %{expand: %%global build_python 0}}
 
-%define build_ruby 0
+%define build_ruby 1
 %{?_without_ruby: %{expand: %%global build_ruby 0}}
 
 %define build_java 0
