@@ -88,23 +88,6 @@ BuildRequires:	swig >= 1.3.27
 BuildRequires: ruby
 BuildRequires: ruby-devel
 BuildRequires: ruby-rdoc
-# Obsoletes - kill all non sys build library packages
-# Just server and client need some libraries and we need just one
-# main ( client ) and one server package, as well bindings and doc packages
-Obsoletes: %name-client-tools < 2:1.2.3-4mdk
-Obsoletes: %name-repos < 1.2.3-4mdk
-Obsoletes: %{_lib}svn_client1_0 < 2:1.2.3-4mdk
-Obsoletes: %{_lib}svn_ra_dav1_0 < 2:1.2.3-4mdk
-Obsoletes: %{_lib}svn_ra_local1_0 < 2:1.2.3-4mdk
-Obsoletes: %{_lib}svn_ra_svn1_0 < 2:1.2.3-4mdk
-Obsoletes: %{_lib}svn_delta1_0 < 2:1.2.3-4mdk
-Obsoletes: %{_lib}svn_diff1_0 < 2:1.2.3-4mdk
-Obsoletes: %{_lib}svn_repos1_0 < 2:1.2.3-4mdk
-Obsoletes: %{_lib}svn_subr1_0 < 2:1.2.3-4mdk
-Obsoletes: %{_lib}svn_fs_fs1_0 < 2:1.2.3-4mdk
-Obsoletes: %{_lib}svn_fs_base1_0 < 2:1.2.3-4mdk
-Conflicts: %name-server < 2:1.2.3-4mdk
-Conflicts: %{libsvn} < 2:1.3.0-2mdk
 Provides: %name-ra-method = %{epoch}:%version-%{release}
 Provides: %name-client-tools = %{epoch}:%version-%{release}
 Provides: svn = %{epoch}:%{version}
@@ -176,7 +159,6 @@ This package contains the subversion book and design info files.
 %package -n %libsvn
 Summary: Subversion libraries
 Group: System/Libraries
-Conflicts: subversion < 2:1.3.0-2mdk 
 
 %description -n %libsvn
 Subversion common libraries
@@ -186,7 +168,6 @@ Subversion common libraries
 %package -n %libsvngnomekeyring
 Summary: gnome-keyring support for svn
 Group: System/Libraries
-Conflicts: subversion < 2:1.3.0-2mdk
 %if %mdvver < 201010
 BuildRequires:  gnome-keyring-devel >= 2.26.1
 %else
@@ -301,8 +282,6 @@ fi
 Summary:	Subversion Repo/Server Tools
 Group: Development/Other
 Requires: %name >= %{epoch}:%version-%{release}
-Conflicts: %name-server < 1.2.3-4mdk
-Obsoletes: %name-repo-tools < 1.2.3-4mdk
 # soname didn't change between 1.3.x and 1.4.x, but we
 # need the right one...
 Requires:	%{libsvn} >= %{epoch}:%{version}
