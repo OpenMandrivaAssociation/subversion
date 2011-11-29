@@ -1,6 +1,6 @@
 %if %mandriva_branch == Cooker
 # Cooker
-%define release %mkrel 2
+%define release %mkrel 1
 %else
 # Old distros
 %define subrel 1
@@ -50,15 +50,15 @@
 %endif
 
 Name: subversion
-Version: 1.7.0
+Version: 1.7.1
 Release: %{release}
 Epoch: 2
 Summary: A Concurrent Versioning System
 License: BSD CC2.0
 Group: Development/Other
 URL: http://subversion.apache.org/
-Source0: http://subversion.tigris.org/tarballs/%name-%version.tar.bz2
-Source1: http://subversion.tigris.org/tarballs/%name-%version.tar.bz2.asc
+Source0: http://www.apache.org/dist/subversion/%name-%version.tar.bz2
+Source1: http://www.apache.org/dist/subversion/%name-%version.tar.bz2.asc
 Source2: 46_mod_dav_svn.conf
 Source3: 47_mod_authz_svn.conf
 Source5: %name-1.3.0-global-config
