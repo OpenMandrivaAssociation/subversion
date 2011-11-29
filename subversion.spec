@@ -1,6 +1,6 @@
 %if %mandriva_branch == Cooker
 # Cooker
-%define release %mkrel 1
+%define release %mkrel 2
 %else
 # Old distros
 %define subrel 1
@@ -571,11 +571,8 @@ mv %{buildroot}%_prefix/local/share/man/man3/* %{buildroot}%{_mandir}/man3/
 # cleanup
 find %{buildroot} -name "perllocal.pod" | xargs rm -f
 
-# fix libtool files perms
-chmod 644 %{buildroot}%{_libdir}/*.la
-
-# delete ruby .la files manually
-rm -f %{buildroot}%{ruby_sitearchdir}/*/*/*.la
+# delete all libtool .la files
+find %{buildroot} -name "*.la" | xargs rm -f
 
 %post doc
 %_install_info svn-design.info
@@ -733,7 +730,6 @@ rm -rf %{buildroot}
 %files devel
 %defattr(-,root,root)
 %doc tools/examples/minimal_client.c
-%{_libdir}/libsvn*.la
 %{_includedir}/subversion*/*
 %{_libdir}/libsvn*.so
 %if %{build_java}
