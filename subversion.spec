@@ -1,6 +1,6 @@
 %if %mandriva_branch == Cooker
 # Cooker
-%define release %mkrel 4
+%define release %mkrel 1
 %else
 # Old distros
 %define subrel 1
@@ -66,7 +66,7 @@
 
 Summary:	A Concurrent Versioning System
 Name:		subversion
-Version:	1.7.1
+Version:	1.7.2
 Release:	%{release}
 Epoch: 2
 License:	BSD CC2.0
@@ -107,7 +107,6 @@ Provides:	%name-ra-method = %{epoch}:%version-%{release}
 Provides:	%name-client-tools = %{epoch}:%version-%{release}
 Provides:	svn = %{epoch}:%{version}
 Requires:	%{libsvn} >= %{epoch}:%{version}
-Buildroot:	%{_tmppath}/%{name}-%{version}-%{release}-buildroot
 
 %description
 Subversion (SVN) is a concurrent version control system which enables one or
