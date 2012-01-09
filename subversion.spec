@@ -396,6 +396,7 @@ export JAVADIR=%{_jvmdir}/java
     --with-apache-libexecdir=%{_libdir}/apache-extramodules \
     --with-apr=%{_bindir}/apr-1-config \
     --with-apr-util=%{_bindir}/apu-1-config \
+    --with-editor=vim \
     --disable-mod-activation \
     --with-swig=%{_prefix} \
     --disable-static \
