@@ -80,6 +80,8 @@ Source5:	%name-1.3.0-global-config
 Source6:	%name-1.3.0-global-servers
 Source7:	http://svnbook.red-bean.com/nightly/en/svn-book-html-chunk.tar.bz2
 Patch0:		subversion-1.7.0-rc3-no_tests.diff
+Patch1:		svn-ruby-1.9-fixes.patch
+Patch2:		svn-update-ruby-tests.patch
 BuildRequires:	automake
 BuildRequires:	autoconf >= 2.54
 BuildRequires:	libtool >= 1.4.2
@@ -360,6 +362,9 @@ a subversion server.
 
 # don't build the tests as we're not running make test since many many years...
 %patch0 -p0
+
+%patch1 -p0 -b .ruby19_1~
+%patch2 -p0 -b .ruby19_2~
 
 # fix shellbang lines, #111498
 perl -pi -e 's|/usr/bin/env perl|%{_bindir}/perl|g' tools/hook-scripts/*.pl.in
