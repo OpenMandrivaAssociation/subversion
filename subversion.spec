@@ -98,7 +98,11 @@ BuildRequires:	libxslt-proc
 BuildRequires:	docbook-style-xsl
 BuildRequires:	sqlite3-devel >= 3.6.18
 BuildRequires:	krb5-devel
+%if %mdvver < 201010
 BuildRequires:	file-devel
+%else
+BuildRequires:	magic-devel
+%endif
 # Swig is runtime only
 BuildRequires:	swig >= 1.3.27
 # needs this despite build_ruby 0
