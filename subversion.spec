@@ -1,10 +1,10 @@
 %if %mandriva_branch == Cooker
 # Cooker
-%define release 5
+%define release 1
 %else
 # Old distros
 %define subrel 1
-%define release %mkrel 1
+%define release %mkrel 0
 %endif
 
 # despite using 
@@ -66,7 +66,7 @@
 
 Summary:	A Concurrent Versioning System
 Name:		subversion
-Version:	1.7.2
+Version:	1.7.3
 Release:	%{release}
 Epoch: 2
 License:	BSD CC2.0
@@ -356,6 +356,23 @@ fixes a lot of the annoyances that CVS users face.
 This package contains the apache server extension DSO for running
 a subversion server.
 
+%package -n	apache-mod_dontdothat
+Summary:	An Apache module that allows you to block specific types of Subversion requests
+Group:		System/Servers
+Requires(pre): rpm-helper
+Requires(postun): rpm-helper
+Requires(pre):	apache-conf >= %{apache_version}
+Requires(pre):	apache >= %{apache_version}
+Requires(pre):	apache-mod_dav_svn = %{epoch}:%{version}
+
+%description -n apache-mod_dontdothat
+mod_dontdothat is an Apache module that allows you to block specific types
+of Subversion requests.  Specifically, it's designed to keep users from doing
+things that are particularly hard on the server, like checking out the root
+of the tree, or the tags or branches directories.  It works by sticking an
+input filter in front of all REPORT requests and looking for dangerous types
+of requests.  If it finds any, it returns a 403 Forbidden error.
+
 %prep
 
 %setup -q -a7
@@ -446,6 +463,11 @@ make swig-rb
 make javahl
 %endif
 
+# compile the extra module as well...
+%{_sbindir}/apxs -c -Isubversion/include -Isubversion \
+    tools/server-side/mod_dontdothat/mod_dontdothat.c \
+    subversion/libsvn_subr/libsvn_subr-1.la
+
 %check
 %if %{build_test}
 make check
@@ -492,6 +514,43 @@ make pure_vendor_install -C subversion/bindings/swig/perl/native DESTDIR=%{build
 install -d %{buildroot}%{_sysconfdir}/httpd/modules.d
 cat %{SOURCE2} > %{buildroot}%{_sysconfdir}/httpd/modules.d/%{mod_dav_conf}
 cat %{SOURCE3} > %{buildroot}%{_sysconfdir}/httpd/modules.d/%{mod_authz_conf}
+
+# install the extra module
+install -m0755 tools/server-side/mod_dontdothat/.libs/mod_dontdothat.so %{buildroot}%{_libdir}/apache-extramodules/
+
+# cleanup
+rm -f %{buildroot}%{_libdir}/apache-extramodules/*.*a
+
+cat > %{buildroot}%{_sysconfdir}/httpd/modules.d/48_mod_dontdothat.conf << EOF
+<IfDefine HAVE_DONTDOTHAT>
+    <IfModule !mod_dontdothat.c>
+	LoadModule dontdothat_module    extramodules/mod_dontdothat.so
+    </IfModule>
+</IfDefine>
+
+<IfModule mod_dontdothat.c>
+
+    <Location /svn>
+        DAV svn
+        SVNParentPath /var/lib/svn/repositories
+        DontDoThatConfigFile %{_sysconfdir}/httpd/conf/dontdothat.conf
+    </Location>
+
+</IfModule>
+EOF
+
+install -d %{buildroot}%{_sysconfdir}/httpd/conf
+cat > %{buildroot}%{_sysconfdir}/httpd/conf/dontdothat.conf << EOF
+[recursive-actions]
+/*/trunk = allow
+/ = deny
+/* = deny
+/*/tags = deny
+/*/branches = deny
+/*/* = deny
+/*/*/tags = deny
+/*/*/branches = deny
+EOF
 
 ######################
 ###  client-tools  ###
@@ -611,6 +670,18 @@ if [ -f %{_var}/lock/subsys/httpd ]; then
 fi
 
 %postun -n apache-mod_dav_svn
+if [ "$1" = "0" ]; then
+    if [ -f %{_var}/lock/subsys/httpd ]; then
+	%{_initrddir}/httpd restart 1>&2
+    fi
+fi
+
+%post -n apache-mod_dontdothat
+if [ -f %{_var}/lock/subsys/httpd ]; then
+    %{_initrddir}/httpd restart 1>&2;
+fi
+
+%postun -n apache-mod_dontdothat
 if [ "$1" = "0" ]; then
     if [ -f %{_var}/lock/subsys/httpd ]; then
 	%{_initrddir}/httpd restart 1>&2
@@ -749,3 +820,9 @@ rm -rf %{buildroot}
 %attr(0755,root,root) %{_libdir}/apache-extramodules/%{mod_dav_so}
 %attr(0755,root,root) %{_libdir}/apache-extramodules/%{mod_authz_so}
 
+%files -n apache-mod_dontdothat
+%defattr(-,root,root)
+%doc tools/server-side/mod_dontdothat/README
+%attr(0644,root,root) %config(noreplace) %{_sysconfdir}/httpd/modules.d/48_mod_dontdothat.conf
+%attr(0644,root,root) %config(noreplace) %{_sysconfdir}/httpd/conf/dontdothat.conf
+%attr(0755,root,root) %{_libdir}/apache-extramodules/mod_dontdothat.so
