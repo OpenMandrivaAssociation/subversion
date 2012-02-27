@@ -98,7 +98,7 @@ BuildRequires:	libxslt-proc
 BuildRequires:	docbook-style-xsl
 BuildRequires:	sqlite3-devel >= 3.6.18
 BuildRequires:	krb5-devel
-%if %mdvver < 201010
+%if %mdvver < 201200
 BuildRequires:	file-devel
 %else
 BuildRequires:	magic-devel
