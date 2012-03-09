@@ -81,6 +81,7 @@ BuildRequires:	apr-devel >= 1:1.4.6
 BuildRequires:	apr-util-devel >= 1.4.1
 BuildRequires:	libxslt-proc
 BuildRequires:	docbook-style-xsl
+BuildRequires:	doxygen
 BuildRequires:	sqlite3-devel >= 3.6.18
 BuildRequires:	krb5-devel
 %if %mdvver < 201200
@@ -255,7 +256,7 @@ Provides:	java-subversion = %{epoch}:%{version}-%{release}
 Requires:	%{name} >= %{epoch}:%{version}-%{release}
 Requires:	%{libsvn} >= %{epoch}:%{version}-%{release}
 Requires:	%{libsvnjavahl} >= %{epoch}:%{version}-%{release}
-BuildRequires:	java-1.6.0-devel
+BuildRequires:	java-devel
 BuildRequires:	ant
 BuildRequires:	jpackage-utils >= 1.7.3-10
 BuildRequires:	junit
@@ -392,6 +393,7 @@ cp %{SOURCE3} .
 
 %if %{build_java}
 export JAVADIR=%{_jvmdir}/java
+export JAVA_HOME=%{_jvmdir}/java
 %endif
 
 %configure2_5x \
@@ -410,7 +412,8 @@ export JAVADIR=%{_jvmdir}/java
     --enable-debug \
 %endif
 %if %{build_java}
-    --with-jdk=%{java_home} \
+    --enable-javahl \
+    --with-jdk=%{_jvmdir}/java \
     --with-junit=%{_javadir}/junit.jar \
 %endif
 %if %{build_gnome_keyring}
