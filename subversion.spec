@@ -21,16 +21,16 @@
 %define build_ruby 1
 %{?_without_ruby: %{expand: %%global build_ruby 0}}
 
-%define build_java 0
+%define build_java 1
 %{?_with_java: %{expand: %%global build_java 1}}
 
 %define build_perl 1
 %{?_without_perl: %{expand: %%global build_perl 0}}
 
-%define build_gnome_keyring 0
+%define build_gnome_keyring 1
 %{?_without_gnome_keyring: %{expand: %%global build_gnome_keyring 0}}
 
-%define build_kwallet 0
+%define build_kwallet 1
 %{?_without_kwallet: %{expand: %%global build_kwallet 0}}
 
 %define build_test 0
@@ -53,7 +53,7 @@
 Summary:	A Concurrent Versioning System
 Name:		subversion
 Version:	1.7.4
-Release:	1
+Release:	2
 Epoch: 2
 License:	BSD CC2.0
 Group:		Development/Other
