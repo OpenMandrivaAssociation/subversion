@@ -1,29 +1,15 @@
-%if %mandriva_branch == Cooker
-# Cooker
-%define release 1
-%else
-# Old distros
-%define subrel 1
-%define release %mkrel 0
-%endif
+# disable the stupid rpmlint shit from hell!!!
+%define _build_pkgcheck_set %{nil}
+%define _build_pkgcheck_srpm %{nil}
 
-# despite using 
 %define _disable_ld_no_undefined 1
 
 %define _requires_exceptions devel(libneon
 
-%define apache_version 2.2.0
+%define apache_version 2.4.0
 %define libsvn %mklibname svn 0
 %define libsvngnomekeyring %mklibname svn-gnome-keyring 0
 %define libsvnkwallet %mklibname svn-kwallet 0
-
-%define mod_version  %{apache_version}_%version
-%define mod_dav_name mod_dav_svn
-%define mod_dav_conf 46_%{mod_dav_name}.conf
-%define mod_dav_so %{mod_dav_name}.so
-%define mod_authz_name mod_authz_svn
-%define mod_authz_conf 47_%{mod_authz_name}.conf
-%define mod_authz_so %{mod_authz_name}.so
 
 # Java requires devel symlinks in non-devel packages due to design
 # (System.loadLibrary). Do not add -devel dependencies.
@@ -41,10 +27,10 @@
 %define build_perl 1
 %{?_without_perl: %{expand: %%global build_perl 0}}
 
-%define build_gnome_keyring 1
+%define build_gnome_keyring 0
 %{?_without_gnome_keyring: %{expand: %%global build_gnome_keyring 0}}
 
-%define build_kwallet 1
+%define build_kwallet 0
 %{?_without_kwallet: %{expand: %%global build_kwallet 0}}
 
 %define build_test 0
@@ -66,25 +52,24 @@
 
 Summary:	A Concurrent Versioning System
 Name:		subversion
-Version:	1.7.3
-Release:	%{release}
+Version:	1.7.4
+Release:	1
 Epoch: 2
 License:	BSD CC2.0
 Group:		Development/Other
 URL:		http://subversion.apache.org/
 Source0:	http://www.apache.org/dist/subversion/%{name}-%{version}.tar.bz2
 Source1:	http://www.apache.org/dist/subversion/%{name}-%{version}.tar.bz2.asc
-Source2:	46_mod_dav_svn.conf
-Source3:	47_mod_authz_svn.conf
+Source2:	svnserve.service
+Source3:	svnserve.sysconf
 Source5:	%name-1.3.0-global-config
 Source6:	%name-1.3.0-global-servers
 Source7:	http://svnbook.red-bean.com/nightly/en/svn-book-html-chunk.tar.bz2
 Patch0:		subversion-1.7.0-rc3-no_tests.diff
 Patch1:		svn-ruby-1.9-fixes.patch
 Patch2:		svn-update-ruby-tests.patch
-BuildRequires:	automake
-BuildRequires:	autoconf >= 2.54
-BuildRequires:	libtool >= 1.4.2
+Patch3:		subversion-1.7.4-apache241.diff
+BuildRequires:	autoconf automake libtool
 BuildRequires:	chrpath
 BuildRequires:	python >= 2.2
 BuildRequires:	texinfo
@@ -92,8 +77,8 @@ BuildRequires:	info-install
 BuildRequires:	db-devel
 BuildRequires:	neon-devel
 BuildRequires:	apache-devel >=  %{apache_version}
-BuildRequires:	apr-devel >= 1:1.3.0
-BuildRequires:	apr-util-devel >= 1.3.0
+BuildRequires:	apr-devel >= 1:1.4.6
+BuildRequires:	apr-util-devel >= 1.4.1
 BuildRequires:	libxslt-proc
 BuildRequires:	docbook-style-xsl
 BuildRequires:	sqlite3-devel >= 3.6.18
@@ -185,9 +170,6 @@ Subversion libraries that allow interaction with the kwallet daemon.
 Summary:	Subversion Server
 Group:		System/Servers
 Requires:	%name >= %{epoch}:%version-%{release}
-Requires(pre): rpm-helper
-Requires(postun): rpm-helper
-Requires(post): sed
 # soname didn't change between 1.3.x and 1.4.x, but we
 # need the right one...
 Requires:	%{libsvn} >= %{epoch}:%{version}
@@ -296,7 +278,6 @@ Requires:	%{libsvn} >= %{epoch}:%{version}
 %description -n	perl-SVN
 This package contains the files necessary to use the subversion
 library functions within perl scripts.
-
 %endif
 
 %package	devel
@@ -335,11 +316,8 @@ subversion libraries.
 Summary:	Subversion server DSO module for apache
 Group:		System/Servers
 Requires:	%name-tools >= %{epoch}:%version-%{release}
-Requires(pre): rpm-helper
-Requires(postun): rpm-helper
-Requires(pre):	apache-conf >= %{apache_version}
-Requires(pre):	apache >= %{apache_version}
-Requires(pre):	apache-mod_dav >= %{apache_version}
+Requires:	apache >= %{apache_version}
+Requires:	apache-mod_dav >= %{apache_version}
 # soname didn't change between 1.3.x and 1.4.x, but we
 # need the right one...
 Requires(pre):	%{libsvn} >= %{epoch}:%{version}
@@ -363,11 +341,8 @@ a subversion server.
 %package -n	apache-mod_dontdothat
 Summary:	An Apache module that allows you to block specific types of Subversion requests
 Group:		System/Servers
-Requires(pre): rpm-helper
-Requires(postun): rpm-helper
-Requires(pre):	apache-conf >= %{apache_version}
-Requires(pre):	apache >= %{apache_version}
-Requires(pre):	apache-mod_dav_svn = %{epoch}:%{version}
+Requires:	apache >= %{apache_version}
+Requires:	apache-mod_dav_svn = %{epoch}:%{version}
 
 %description -n apache-mod_dontdothat
 mod_dontdothat is an Apache module that allows you to block specific types
@@ -386,6 +361,7 @@ of requests.  If it finds any, it returns a 403 Forbidden error.
 
 %patch1 -p0 -b .ruby19_1~
 %patch2 -p0 -b .ruby19_2~
+%patch3 -p0 -b .apache241
 
 # fix shellbang lines, #111498
 perl -pi -e 's|/usr/bin/env perl|%{_bindir}/perl|g' tools/hook-scripts/*.pl.in
@@ -408,6 +384,9 @@ perl -pi -e "s|/lib\b|/%{_lib}|g" \
 
 ./autogen.sh --release
 
+cp %{SOURCE2} .
+cp %{SOURCE3} .
+
 %build
 %serverbuild
 
@@ -418,8 +397,8 @@ export JAVADIR=%{_jvmdir}/java
 %configure2_5x \
     --localstatedir=/var/lib \
     --with-apr_memcache=%{_prefix} \
-    --with-apxs=%{_sbindir}/apxs \
-    --with-apache-libexecdir=%{_libdir}/apache-extramodules \
+    --with-apxs=%{_bindir}/apxs \
+    --with-apache-libexecdir=%{_libdir}/apache \
     --with-apr=%{_bindir}/apr-1-config \
     --with-apr-util=%{_bindir}/apu-1-config \
     --with-editor=vim \
@@ -468,7 +447,7 @@ make javahl
 %endif
 
 # compile the extra module as well...
-%{_sbindir}/apxs -c -Isubversion/include -Isubversion \
+%{_bindir}/apxs -c -Isubversion/include -Isubversion \
     tools/server-side/mod_dontdothat/mod_dontdothat.c \
     subversion/libsvn_subr/libsvn_subr-1.la
 
@@ -478,13 +457,12 @@ make check
 %endif
 
 %install
-rm -rf %{buildroot}
 
 %makeinstall_std
 
 %if %{build_python}
 %makeinstall_std install-swig-py swig_pydir=%{py_platsitedir}/libsvn swig_pydir_extra=%{py_sitedir}/svn
-# Precompile python 
+# Precompile python
 %py_compile %{buildroot}/%{py_platsitedir}/libsvn
 %py_compile %{buildroot}/%{py_sitedir}/svn
 %endif
@@ -516,31 +494,20 @@ make pure_vendor_install -C subversion/bindings/swig/perl/native DESTDIR=%{build
 %endif
 
 install -d %{buildroot}%{_sysconfdir}/httpd/modules.d
-cat %{SOURCE2} > %{buildroot}%{_sysconfdir}/httpd/modules.d/%{mod_dav_conf}
-cat %{SOURCE3} > %{buildroot}%{_sysconfdir}/httpd/modules.d/%{mod_authz_conf}
+echo "LoadModule dav_svn_module %{_libdir}/apache/mod_dav_svn.so" > %{buildroot}%{_sysconfdir}/httpd/modules.d/146_mod_dav_svn.conf
+echo "LoadModule authz_svn_module %{_libdir}/apache/mod_authz_svn.so" > %{buildroot}%{_sysconfdir}/httpd/modules.d/147_mod_authz_svn.conf
 
 # install the extra module
-install -m0755 tools/server-side/mod_dontdothat/.libs/mod_dontdothat.so %{buildroot}%{_libdir}/apache-extramodules/
+install -m0755 tools/server-side/mod_dontdothat/.libs/mod_dontdothat.so %{buildroot}%{_libdir}/apache/
 
-# cleanup
-rm -f %{buildroot}%{_libdir}/apache-extramodules/*.*a
+cat > %{buildroot}%{_sysconfdir}/httpd/modules.d/148_mod_dontdothat.conf << EOF
+LoadModule dontdothat_module %{_libdir}/apache/mod_dontdothat.so
 
-cat > %{buildroot}%{_sysconfdir}/httpd/modules.d/48_mod_dontdothat.conf << EOF
-<IfDefine HAVE_DONTDOTHAT>
-    <IfModule !mod_dontdothat.c>
-	LoadModule dontdothat_module    extramodules/mod_dontdothat.so
-    </IfModule>
-</IfDefine>
-
-<IfModule mod_dontdothat.c>
-
-    <Location /svn>
-        DAV svn
-        SVNParentPath /var/lib/svn/repositories
-        DontDoThatConfigFile %{_sysconfdir}/httpd/conf/dontdothat.conf
-    </Location>
-
-</IfModule>
+<Location /svn>
+    DAV svn
+    SVNParentPath /var/lib/svn/repositories
+    DontDoThatConfigFile %{_sysconfdir}/httpd/conf/dontdothat.conf
+</Location>
 EOF
 
 install -d %{buildroot}%{_sysconfdir}/httpd/conf
@@ -613,25 +580,14 @@ find %{buildroot}%{perl_vendorarch} -type f -name "*.so" | xargs chrpath -d
 # handle translations
 %find_lang %name
 
-# fix the server parts
-install -d %{buildroot}%{_sysconfdir}/xinetd.d
-cat > svnserve.xinetd << EOF
-# default: off
-# description: svnserve is the server part of Subversion.
-service svnserve
-{
-    disable		= yes
-    port		= 3690
-    socket_type		= stream
-    protocol		= tcp
-    wait		= no
-    user		= svn
-    server		= %{_bindir}/svnserve
-    server_args		= -i -r /var/lib/svn/repositories
-}
-EOF
-install -m 644 svnserve.xinetd %{buildroot}%{_sysconfdir}/xinetd.d/svnserve
+# Install svnserve bits
+install -d %{buildroot}/var/run/svnserve
 install -d %{buildroot}/var/lib/svn/repositories
+install -d %{buildroot}/lib/systemd/system
+install -d %{buildroot}%{_sysconfdir}/sysconfig
+
+install -m0644 svnserve.service %{buildroot}/lib/systemd/system/svnserve.service
+install -m0644 svnserve.sysconf %{buildroot}%{_sysconfdir}/sysconfig/svnserve
 
 # Move perl man
 mv %{buildroot}%_prefix/local/share/man/man3/* %{buildroot}%{_mandir}/man3/
@@ -664,39 +620,43 @@ if ! grep -qE '^svn[[:space:]]+3690/(tcp|udp)[[:space:]]+svnserve' %{_sysconfdir
 	echo -e "svn\t3690/tcp\tsvnserve\t# Subversion svnserve" >> /etc/services
 	echo -e "svn\t3690/udp\tsvnserve\t# Subversion svnserve" >> /etc/services
 fi
+if [ $1 -eq 1 ] ; then 
+    # Initial installation 
+    /bin/systemctl daemon-reload >/dev/null 2>&1 || :
+fi
 
 %postun server
 %_postun_userdel svn
+/bin/systemctl daemon-reload >/dev/null 2>&1 || :
+if [ $1 -ge 1 ] ; then
+    # Package upgrade, not uninstall
+    /bin/systemctl try-restart svnserve.service >/dev/null 2>&1 || :
+fi
+
+%preun server
+if [ $1 = 0 ]; then
+    # Package removal, not upgrade
+    /bin/systemctl --no-reload disable svnserve.service > /dev/null 2>&1 || :
+    /bin/systemctl stop svnserve.service > /dev/null 2>&1 || :
+fi
 
 %post -n apache-mod_dav_svn
-if [ -f %{_var}/lock/subsys/httpd ]; then
-    %{_initrddir}/httpd restart 1>&2;
-fi
+/bin/systemctl daemon-reload >/dev/null 2>&1 || :
 
 %postun -n apache-mod_dav_svn
 if [ "$1" = "0" ]; then
-    if [ -f %{_var}/lock/subsys/httpd ]; then
-	%{_initrddir}/httpd restart 1>&2
-    fi
+    /bin/systemctl daemon-reload >/dev/null 2>&1 || :
 fi
 
 %post -n apache-mod_dontdothat
-if [ -f %{_var}/lock/subsys/httpd ]; then
-    %{_initrddir}/httpd restart 1>&2;
-fi
+/bin/systemctl daemon-reload >/dev/null 2>&1 || :
 
 %postun -n apache-mod_dontdothat
 if [ "$1" = "0" ]; then
-    if [ -f %{_var}/lock/subsys/httpd ]; then
-	%{_initrddir}/httpd restart 1>&2
-    fi
+    /bin/systemctl daemon-reload >/dev/null 2>&1 || :
 fi
 
-%clean
-rm -rf %{buildroot}
-
 %files -f %{name}.lang
-%defattr(-,root,root)
 %{_sysconfdir}/bash_completion.d/subversion
 %{_bindir}/svn
 %{_bindir}/svnversion
@@ -708,14 +668,12 @@ rm -rf %{buildroot}
 %dir %{_datadir}/subversion-%{version}
 
 %files doc
-%defattr(0644,root,root,755)
 %doc svnbook-1.*
 %doc doc/user/*.html
 %doc doc/user/*.txt
 
 %if %{build_gnome_keyring}
 %files -n %libsvngnomekeyring
-%defattr(-,root,root)
 # list all ra libs to make sure we don't miss any
 # in a bogus build
 %{_libdir}/libsvn_auth_gnome_keyring-1.so.0*
@@ -723,14 +681,12 @@ rm -rf %{buildroot}
 
 %if %{build_kwallet}
 %files -n %libsvnkwallet
-%defattr(-,root,root)
 # list all ra libs to make sure we don't miss any
 # in a bogus build
 %{_libdir}/libsvn_auth_kwallet-1.so.0*
 %endif
 
 %files -n %libsvn
-%defattr(-,root,root)
 %config(noreplace) %{_sysconfdir}/subversion/*
 # list all ra libs to make sure we don't miss any
 # in a bogus build
@@ -747,16 +703,16 @@ rm -rf %{buildroot}
 %{_libdir}/libsvn_repos-*.so.*
 
 %files server
-%defattr(-,root,root)
 %doc BUGS CHANGES COMMITTERS INSTALL
-%config(noreplace) %{_sysconfdir}/xinetd.d/svnserve
+%config(noreplace) %{_sysconfdir}/sysconfig/svnserve
 %{_bindir}/svnserve
+/lib/systemd/system/svnserve.service
+/var/run/svnserve
 /var/lib/svn
 %{_mandir}/man8/svnserve.8*
 %{_mandir}/man5/svnserve.conf.5*
 
 %files tools
-%defattr(-,root,root)
 %{_bindir}/hot-backup*
 %{_bindir}/svnadmin
 %{_bindir}/svnsync
@@ -769,7 +725,6 @@ rm -rf %{buildroot}
 
 %if %{build_ruby}
 %files -n ruby-svn
-%defattr(-,root,root)
 %{ruby_sitearchdir}/svn
 %{ruby_sitelibdir}/*/*.rb
 %{_libdir}/libsvn_swig_ruby*.so.*
@@ -777,7 +732,6 @@ rm -rf %{buildroot}
 
 %if %{build_python}
 %files -n python-svn
-%defattr(0644,root,root,755)
 %doc tools/examples/*.py subversion/bindings/swig/INSTALL subversion/bindings/swig/NOTES
 %{_libdir}/libsvn_swig_py*.so.*
 %{py_sitedir}/svn
@@ -786,11 +740,9 @@ rm -rf %{buildroot}
 
 %if %{build_java}
 %files -n %{libsvnjavahl}
-%defattr(0644,root,root,0755)
 %{_libdir}/libsvnjavahl-%{svnjavahl_api}.*
 
 %files -n svn-javahl
-%defattr(0644,root,root,0755)
 %doc subversion/bindings/javahl/README
 %{_javadir}/svn-javahl.jar
 %{_javadir}/svn-javahl-%{version}.jar
@@ -798,7 +750,6 @@ rm -rf %{buildroot}
 
 %if %{build_perl}
 %files -n perl-SVN
-%defattr(-,root,root)
 %doc subversion/bindings/swig/INSTALL subversion/bindings/swig/NOTES
 %{_libdir}/libsvn_swig_perl*.so.*
 %{perl_vendorarch}/SVN
@@ -808,7 +759,6 @@ rm -rf %{buildroot}
 %endif
 
 %files devel
-%defattr(-,root,root)
 %doc tools/examples/minimal_client.c
 %{_includedir}/subversion*/*
 %{_libdir}/libsvn*.so
@@ -817,16 +767,14 @@ rm -rf %{buildroot}
 %endif
 
 %files -n apache-mod_dav_svn
-%defattr(-,root,root)
-%doc subversion/%{mod_authz_name}/INSTALL
-%attr(0644,root,root) %config(noreplace) %{_sysconfdir}/httpd/modules.d/%{mod_dav_conf}
-%attr(0644,root,root) %config(noreplace) %{_sysconfdir}/httpd/modules.d/%{mod_authz_conf}
-%attr(0755,root,root) %{_libdir}/apache-extramodules/%{mod_dav_so}
-%attr(0755,root,root) %{_libdir}/apache-extramodules/%{mod_authz_so}
+%doc subversion/mod_authz_svn/INSTALL
+%attr(0644,root,root) %config(noreplace) %{_sysconfdir}/httpd/modules.d/146_mod_dav_svn.conf
+%attr(0644,root,root) %config(noreplace) %{_sysconfdir}/httpd/modules.d/147_mod_authz_svn.conf
+%attr(0755,root,root) %{_libdir}/apache/mod_dav_svn.so
+%attr(0755,root,root) %{_libdir}/apache/mod_authz_svn.so
 
 %files -n apache-mod_dontdothat
-%defattr(-,root,root)
 %doc tools/server-side/mod_dontdothat/README
-%attr(0644,root,root) %config(noreplace) %{_sysconfdir}/httpd/modules.d/48_mod_dontdothat.conf
+%attr(0644,root,root) %config(noreplace) %{_sysconfdir}/httpd/modules.d/148_mod_dontdothat.conf
 %attr(0644,root,root) %config(noreplace) %{_sysconfdir}/httpd/conf/dontdothat.conf
-%attr(0755,root,root) %{_libdir}/apache-extramodules/mod_dontdothat.so
+%attr(0755,root,root) %{_libdir}/apache/mod_dontdothat.so
