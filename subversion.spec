@@ -255,7 +255,7 @@ Provides:	java-subversion = %{epoch}:%{version}-%{release}
 Requires:	%{name} >= %{epoch}:%{version}-%{release}
 Requires:	%{libsvn} >= %{epoch}:%{version}-%{release}
 Requires:	%{libsvnjavahl} >= %{epoch}:%{version}-%{release}
-BuildRequires:	java-devel
+BuildRequires:	java-1.6.0-devel
 BuildRequires:	ant
 BuildRequires:	jpackage-utils >= 1.7.3-10
 BuildRequires:	junit
