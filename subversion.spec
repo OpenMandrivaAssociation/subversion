@@ -53,7 +53,7 @@
 Summary:	A Concurrent Versioning System
 Name:		subversion
 Version:	1.7.4
-Release:	2
+Release:	3
 Epoch: 2
 License:	BSD CC2.0
 Group:		Development/Other
@@ -449,11 +449,6 @@ make swig-rb
 make javahl
 %endif
 
-# compile the extra module as well...
-%{_bindir}/apxs -c -Isubversion/include -Isubversion \
-    tools/server-side/mod_dontdothat/mod_dontdothat.c \
-    subversion/libsvn_subr/libsvn_subr-1.la
-
 %check
 %if %{build_test}
 make check
@@ -499,9 +494,6 @@ make pure_vendor_install -C subversion/bindings/swig/perl/native DESTDIR=%{build
 install -d %{buildroot}%{_sysconfdir}/httpd/modules.d
 echo "LoadModule dav_svn_module %{_libdir}/apache/mod_dav_svn.so" > %{buildroot}%{_sysconfdir}/httpd/modules.d/146_mod_dav_svn.conf
 echo "LoadModule authz_svn_module %{_libdir}/apache/mod_authz_svn.so" > %{buildroot}%{_sysconfdir}/httpd/modules.d/147_mod_authz_svn.conf
-
-# install the extra module
-install -m0755 tools/server-side/mod_dontdothat/.libs/mod_dontdothat.so %{buildroot}%{_libdir}/apache/
 
 cat > %{buildroot}%{_sysconfdir}/httpd/modules.d/148_mod_dontdothat.conf << EOF
 LoadModule dontdothat_module %{_libdir}/apache/mod_dontdothat.so
