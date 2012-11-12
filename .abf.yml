@@ -1,0 +1,8 @@
+sources:
+  "subversion-1.3.0-global-config:"	811fbcd0ab7fed434e6079594f4b578fd240ab17
+  "subversion-1.3.0-global-servers:"	de28b46a74898f0544ea195c06b2f296ca0a49da
+  "subversion-1.7.5.tar.bz2:"	05c079762690d5ac1ccd2549742e7ef70fa45cf1
+  "subversion-1.7.5.tar.bz2.asc:"	b267cba19b4f56360657a5bf5b231950e027a45a
+  "svn-book-html-chunk.tar.bz2:"	ad9ae57c45b210d1882070b33e1cd3f10b87b149
+  "svnserve.service:"	a05451a8f1d239b2303ff1866273c2e8a2ead1be
+  "svnserve.sysconf:"	406999fb3e1038d3e48d5ee33add12ba3fc5dbd4

@@ -1,0 +1,381 @@
+Index: Makefile.in
+===================================================================
+--- Makefile.in	(revision 1221556)
++++ Makefile.in	(working copy)
+@@ -311,7 +311,7 @@ INSTALL_EXTRA_SWIG_RB=\
+     $(INSTALL_DATA) "$$i" $(DESTDIR)$(SWIG_RB_SITE_LIB_DIR)/svn; \
+   done
+ 
+-APXS = @APXS@ 
++APXS = @APXS@
+ 
+ PYTHON = @PYTHON@
+ PERL = @PERL@
+@@ -824,9 +824,14 @@ swig-rb: autogen-swig-rb
+ 
+ check-swig-rb: swig-rb svnserve
+ 	cd $(SWIG_RB_DIR); \
+-	  $(RUBY) -I $(SWIG_RB_SRC_DIR) \
+-	    $(SWIG_RB_SRC_DIR)/test/run-test.rb \
+-	    --verbose=$(SWIG_RB_TEST_VERBOSE)
++	  if [ "$(RUBY_MAJOR)" -eq 1 -a "$(RUBY_MINOR)" -lt 9 ] ; then \
++	    $(RUBY) -I $(SWIG_RB_SRC_DIR) \
++	      $(SWIG_RB_SRC_DIR)/test/run-test.rb \
++	      --verbose=$(SWIG_RB_TEST_VERBOSE); \
++	  else \
++	    $(RUBY) -I $(SWIG_RB_SRC_DIR) \
++	      $(SWIG_RB_SRC_DIR)/test/run-test.rb; \
++	  fi
+ 
+ EXTRACLEAN_SWIG_RB=rm -f $(SWIG_RB_SRC_DIR)/svn_*.c $(SWIG_RB_SRC_DIR)/core.c
+ 
+Index: subversion/bindings/swig/ruby/test/test_client.rb
+===================================================================
+--- subversion/bindings/swig/ruby/test/test_client.rb	(revision 1221556)
++++ subversion/bindings/swig/ruby/test/test_client.rb	(working copy)
+@@ -2203,7 +2203,11 @@ class SvnClientTest < Test::Unit::TestCase
+ 
+     make_context(log) do |ctx|
+       items = nil
+-      ctx.set_log_msg_func do |items|
++      ctx.set_log_msg_func do |l_items|
++	# ruby 1.8 magically carried the assignment of 'items' back from this Proc block, 
++        # but in 1.9, we need to have names that don't conflict, and set the outside 'items'.
++        # This works in 1.8 as well
++        items = l_items
+         [true, log]
+       end
+ 
+Index: subversion/bindings/swig/ruby/test/test_core.rb
+===================================================================
+--- subversion/bindings/swig/ruby/test/test_core.rb	(revision 1221556)
++++ subversion/bindings/swig/ruby/test/test_core.rb	(working copy)
+@@ -1,3 +1,4 @@
++# encoding: UTF-8
+ # ====================================================================
+ #    Licensed to the Apache Software Foundation (ASF) under one
+ #    or more contributor license agreements.  See the NOTICE file
+@@ -52,7 +53,13 @@ class SvnCoreTest < Test::Unit::TestCase
+     now = Time.now.gmtime
+     str = now.strftime("%Y-%m-%dT%H:%M:%S.") + "#{now.usec}Z"
+ 
+-    assert_equal(now, Time.from_svn_format(str))
++    if RUBY_VERSION > '1.9'
++      # ruby 1.9 Time comparison gets into the nano-seconds, that strftime
++      # shaves off. So we can compare epoch time instead
++      assert_equal(now.to_i, Time.from_svn_format(str).gmtime.to_i)
++    else
++      assert_equal(now, Time.from_svn_format(str).gmtime)
++    end
+ 
+     apr_time = now.to_i * 1000000 + now.usec
+     assert_equal(apr_time, now.to_apr_time)
+@@ -244,7 +251,11 @@ class SvnCoreTest < Test::Unit::TestCase
+       config_infos << [section, name, value]
+     end
+     assert_equal(infos.sort, config_infos.sort)
+-    assert_equal(infos.sort, config.collect {|args| args}.sort)
++    if RUBY_VERSION > '1.9'
++      assert_equal(infos.sort, config.collect {|sect,name,val| [sect,name,val]}.sort)
++    else
++      assert_equal(infos.sort, config.collect {|args| args}.sort)
++    end
+   end
+ 
+   def test_config_find_group
+@@ -532,7 +543,13 @@ EOD
+     date_str = now.strftime("%Y-%m-%dT%H:%M:%S")
+     date_str << ".#{now.usec}Z"
+     info.date = date_str
+-    assert_equal(now, info.date)
++    if RUBY_VERSION > '1.9'
++      # ruby 1.9 Time comparison gets into the nano-seconds, that strftime
++      # shaves off. So we can compare epoch time instead
++      assert_equal(now.to_i, info.date.gmtime.to_i)
++    else
++      assert_equal(now, info.date.gmtime)
++    end
+   end
+ 
+   def test_svn_prop
+Index: subversion/bindings/swig/ruby/test/test_repos.rb
+===================================================================
+--- subversion/bindings/swig/ruby/test/test_repos.rb	(revision 1221556)
++++ subversion/bindings/swig/ruby/test/test_repos.rb	(working copy)
+@@ -98,11 +98,12 @@ class SvnReposTest < Test::Unit::TestCase
+     fs_type = Svn::Fs::TYPE_FSFS
+     fs_config = {Svn::Fs::CONFIG_FS_TYPE => fs_type}
+     repos = nil
+-    Svn::Repos.create(tmp_repos_path, {}, fs_config) do |repos|
++    Svn::Repos.create(tmp_repos_path, {}, fs_config) do |t_repos|
+       assert(File.exist?(tmp_repos_path))
+-      fs_type_path = File.join(repos.fs.path, Svn::Fs::CONFIG_FS_TYPE)
++      fs_type_path = File.join(t_repos.fs.path, Svn::Fs::CONFIG_FS_TYPE)
+       assert_equal(fs_type, File.open(fs_type_path) {|f| f.read.chop})
+-      repos.fs.set_warning_func(&warning_func)
++      t_repos.fs.set_warning_func(&warning_func)
++      repos = t_repos
+     end
+ 
+     assert(repos.closed?)
+Index: subversion/bindings/swig/ruby/test/test-unit-ext.rb
+===================================================================
+--- subversion/bindings/swig/ruby/test/test-unit-ext.rb	(revision 1221556)
++++ subversion/bindings/swig/ruby/test/test-unit-ext.rb	(working copy)
+@@ -17,7 +17,7 @@
+ #    under the License.
+ # ====================================================================
+ 
+-require "test-unit-ext/always-show-result"
++require "test-unit-ext/always-show-result" if RUBY_VERSION < '1.9.3'
+ require "test-unit-ext/priority"
+-require "test-unit-ext/backtrace-filter"
+-require "test-unit-ext/long-display-for-emacs"
++require "test-unit-ext/backtrace-filter" if RUBY_VERSION < '1.9.3'
++require "test-unit-ext/long-display-for-emacs" if RUBY_VERSION < '1.9.3'
+Index: subversion/bindings/swig/ruby/test/test_fs.rb
+===================================================================
+--- subversion/bindings/swig/ruby/test/test_fs.rb	(revision 1221556)
++++ subversion/bindings/swig/ruby/test/test_fs.rb	(working copy)
+@@ -20,7 +20,7 @@
+ require "my-assertions"
+ require "util"
+ require "time"
+-require "md5"
++require "digest/md5"
+ 
+ require "svn/core"
+ require "svn/fs"
+@@ -49,14 +49,15 @@ class SvnFsTest < Test::Unit::TestCase
+ 
+     assert(!File.exist?(path))
+     fs = nil
+-    callback = Proc.new do |fs|
++    callback = Proc.new do |t_fs|
+       assert(File.exist?(path))
+       assert_equal(fs_type, Svn::Fs.type(path))
+-      fs.set_warning_func do |err|
++      t_fs.set_warning_func do |err|
+         p err
+         abort
+       end
+-      assert_equal(path, fs.path)
++      assert_equal(path, t_fs.path)
++      fs = t_fs
+     end
+     yield(:create, [path, config], callback)
+ 
+@@ -162,7 +163,7 @@ class SvnFsTest < Test::Unit::TestCase
+ 
+       assert_equal(src, @fs.root.file_contents(path_in_repos){|f| f.read})
+       assert_equal(src.length, @fs.root.file_length(path_in_repos))
+-      assert_equal(MD5.new(src).hexdigest,
++      assert_equal(Digest::MD5.hexdigest(src),
+                    @fs.root.file_md5_checksum(path_in_repos))
+ 
+       assert_equal([path_in_repos], @fs.root.paths_changed.keys)
+@@ -364,7 +365,7 @@ class SvnFsTest < Test::Unit::TestCase
+ 
+       File.open(path, "w") {|f| f.print(modified)}
+       @fs.transaction do |txn|
+-        checksum = MD5.new(normalize_line_break(result)).hexdigest
++        checksum = Digest::MD5.hexdigest(normalize_line_break(result))
+         stream = txn.root.apply_text(path_in_repos, checksum)
+         stream.write(normalize_line_break(result))
+         stream.close
+@@ -392,8 +393,8 @@ class SvnFsTest < Test::Unit::TestCase
+ 
+       File.open(path, "w") {|f| f.print(modified)}
+       @fs.transaction do |txn|
+-        base_checksum = MD5.new(normalize_line_break(src)).hexdigest
+-        checksum = MD5.new(normalize_line_break(result)).hexdigest
++        base_checksum = Digest::MD5.hexdigest(normalize_line_break(src))
++        checksum = Digest::MD5.hexdigest(normalize_line_break(result))
+         handler = txn.root.apply_textdelta(path_in_repos,
+                                            base_checksum, checksum)
+         assert_raises(Svn::Error::ChecksumMismatch) do
+Index: subversion/bindings/swig/ruby/test/test_wc.rb
+===================================================================
+--- subversion/bindings/swig/ruby/test/test_wc.rb	(revision 1221556)
++++ subversion/bindings/swig/ruby/test/test_wc.rb	(working copy)
+@@ -530,7 +530,7 @@ EOE
+       ctx.ci(lf_path)
+ 
+       Svn::Wc::AdmAccess.open(nil, @wc_path, true, 5) do |access|
+-        _wrap_assertion do
++        _my_assert_block do
+           File.open(src_path, "wb") {|f| f.print(source)}
+           args = [method_name, src_path, crlf_path, Svn::Wc::TRANSLATE_FROM_NF]
+           result = yield(access.send(*args), source)
+@@ -1084,7 +1084,11 @@ EOE
+         assert_not_nil context
+         assert_kind_of Svn::Wc::Context, context
+       end
+-      assert_nil result;
++      if RUBY_VERSION > '1.9'
++        assert_equal(result,true)
++      else
++        assert_nil result
++      end
+     end
+   end
+ 
+Index: subversion/bindings/swig/ruby/test/my-assertions.rb
+===================================================================
+--- subversion/bindings/swig/ruby/test/my-assertions.rb	(revision 1221556)
++++ subversion/bindings/swig/ruby/test/my-assertions.rb	(working copy)
+@@ -24,20 +24,33 @@ module Test
+   module Unit
+     module Assertions
+ 
++      # make an intermediary assertion block handler
++      def _my_assert_block(&block)
++	if RUBY_VERSION > '1.9'
++	  assert_block do
++	    yield
++	  end
++	else
++	  _wrap_assertion do
++	    yield
++	  end
++	end
++      end
++
+       def assert_true(boolean, message=nil)
+-        _wrap_assertion do
++        _my_assert_block do
+           assert_equal(true, boolean, message)
+         end
+       end
+ 
+       def assert_false(boolean, message=nil)
+-        _wrap_assertion do
++        _my_assert_block do
+           assert_equal(false, boolean, message)
+         end
+       end
+ 
+       def assert_nested_sorted_array(expected, actual, message=nil)
+-        _wrap_assertion do
++        _my_assert_block do
+           assert_equal(expected.collect {|elem| elem.sort},
+                        actual.collect {|elem| elem.sort},
+                        message)
+@@ -45,7 +58,7 @@ module Test
+       end
+ 
+       def assert_equal_log_entries(expected, actual, message=nil)
+-        _wrap_assertion do
++        _my_assert_block do
+           actual = actual.collect do |entry|
+             changed_paths = entry.changed_paths
+             changed_paths.each_key do |path|
+Index: subversion/bindings/swig/ruby/test/test-unit-ext/priority.rb
+===================================================================
+--- subversion/bindings/swig/ruby/test/test-unit-ext/priority.rb	(revision 1221556)
++++ subversion/bindings/swig/ruby/test/test-unit-ext/priority.rb	(working copy)
+@@ -179,7 +179,7 @@ module Test
+         apply_priority
+         !@tests.empty?
+       end
+-    end
++    end if RUBY_VERSION < '1.9.3'
+ 
+     class AutoRunner
+       alias_method :original_options, :options
+Index: subversion/bindings/swig/ruby/test/test_delta.rb
+===================================================================
+--- subversion/bindings/swig/ruby/test/test_delta.rb	(revision 1221556)
++++ subversion/bindings/swig/ruby/test/test_delta.rb	(working copy)
+@@ -17,9 +17,10 @@
+ #    under the License.
+ # ====================================================================
+ 
++require "my-assertions"
+ require "util"
+ require "stringio"
+-require 'md5'
++require 'digest/md5'
+ require 'tempfile'
+ 
+ require "svn/info"
+@@ -46,8 +47,8 @@ class SvnDeltaTest < Test::Unit::TestCase
+     target = StringIO.new(t)
+     stream = Svn::Delta::TextDeltaStream.new(source, target)
+     assert_nil(stream.md5_digest)
+-    _wrap_assertion do
+-      stream.each do |window|
++    _my_assert_block do
++      ret = stream.each do |window|
+         window.ops.each do |op|
+           op_size = op.offset + op.length
+           case op.action_code
+@@ -62,8 +63,9 @@ class SvnDeltaTest < Test::Unit::TestCase
+           end
+         end
+       end
++      true if RUBY_VERSION > '1.9' # this block returns nil in > ruby '1.9'
+     end
+-    assert_equal(MD5.new(t).hexdigest, stream.md5_digest)
++    assert_equal(Digest::MD5.hexdigest(t), stream.md5_digest)
+   end
+ 
+   def test_txdelta_window_compose
+@@ -81,7 +83,7 @@ class SvnDeltaTest < Test::Unit::TestCase
+       end
+     end
+ 
+-    _wrap_assertion do
++    assert_block do
+       composed_window.ops.each do |op|
+         op_size = op.offset + op.length
+         case op.action_code
+@@ -174,6 +176,7 @@ class SvnDeltaTest < Test::Unit::TestCase
+     Svn::Delta.send(target_text, handler)
+     output.rewind
+     result = output.read
++    # FIXME this is needing encoding love on ruby 1.9
+     assert_match(/\ASVN.*#{target_text}\z/, result)
+ 
+     # skip svndiff window
+Index: configure.ac
+===================================================================
+--- configure.ac	(revision 1221556)
++++ configure.ac	(working copy)
+@@ -1160,14 +1160,29 @@ if test "$RUBY" != "none"; then
+     ])
+     RUBY_MINOR="$svn_cv_ruby_minor"
+ 
++    # WHY they have not changed the version of there API, I do not know ...
++    AC_CACHE_CHECK([for Ruby tiny version], [svn_cv_ruby_tiny],[
++    svn_cv_ruby_tiny="`$RUBY -rrbconfig -e '
++        begin
++          print Config::CONFIG.fetch(%q(RUBY_PROGRAM_VERSION))
++	rescue IndexError
++          print Config::CONFIG.fetch(%q(TEENY))
++	end
++      ' | cut -d . -f 3` "
++    ])
++    RUBY_PROGRAM_TINY="$svn_cv_ruby_tiny"
++
+     AC_SUBST(RUBY_MAJOR)
+     AC_SUBST(RUBY_MINOR)
+-    if test ! \( "$RUBY_MAJOR" -eq "1" -a "$RUBY_MINOR" -eq "8" \); then
+-      # Disallow Ruby 1.9 or later until the binding tests get fixed
+-      # to run with those versions.
+-      RUBY="none"
+-      AC_MSG_WARN([The detected Ruby is too new for Subversion to use])
+-      AC_MSG_WARN([Only 1.8.x releases are supported at this time])
++    AC_SUBST(RUBY_PROGRAM_TINY)
++    if test ! \( "$RUBY_MAJOR" -eq "1" -a "$RUBY_MINOR" -gt "8" \); then
++      if test \( "$RUBY_PROGRAM_TINY" -lt "3" \); then
++	# Disallow Ruby 1.9 or later until the binding tests get fixed
++	# to run with those versions.
++	RUBY="none"
++	AC_MSG_WARN([The detected Ruby version issue, for Subversion to use])
++	AC_MSG_WARN([Only 1.8.x or > 1.9.3 releases are supported at this time])
++      fi
+     fi
+   else
+     AC_MSG_RESULT([no])
+
