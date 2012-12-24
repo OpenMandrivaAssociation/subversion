@@ -57,7 +57,7 @@
 Summary:	A Concurrent Versioning System
 Name:		subversion
 Version:	1.7.5
-Release:	3
+Release:	4
 Epoch:		2
 License:	BSD CC2.0
 Group:		Development/Other
