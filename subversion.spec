@@ -77,7 +77,6 @@ BuildRequires:	autoconf automake libtool
 BuildRequires:	chrpath
 BuildRequires:	python
 BuildRequires:	texinfo
-BuildRequires:	info-install
 BuildRequires:	db-devel
 BuildRequires:	pkgconfig(neon)
 BuildRequires:	apache-devel >= %{apache_version}
