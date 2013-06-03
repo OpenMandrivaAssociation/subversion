@@ -56,8 +56,8 @@
 
 Summary:	A Concurrent Versioning System
 Name:		subversion
-Version:	1.7.5
-Release:	5
+Version:	1.7.10
+Release:	1
 Epoch:		2
 License:	BSD CC2.0
 Group:		Development/Other
@@ -72,7 +72,6 @@ Source7:	http://svnbook.red-bean.com/nightly/en/svn-book-html-chunk.tar.bz2
 Patch0:		subversion-1.7.0-rc3-no_tests.diff
 Patch1:		svn-ruby-1.9-fixes.patch
 Patch2:		svn-update-ruby-tests.patch
-Patch3:		subversion-1.7.5-kdewallet.cpp-g++-fix.patch
 BuildRequires:	autoconf automake libtool
 BuildRequires:	chrpath
 BuildRequires:	python
@@ -356,8 +355,6 @@ of requests.  If it finds any, it returns a 403 Forbidden error.
 
 %patch1 -p0 -b .ruby19_1~
 %patch2 -p0 -b .ruby19_2~
-
-%patch3 -p1 -b .gcc47
 
 # fix shellbang lines, #111498
 perl -pi -e 's|/usr/bin/env perl|%{_bindir}/perl|g' tools/hook-scripts/*.pl.in
