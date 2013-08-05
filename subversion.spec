@@ -56,7 +56,7 @@
 
 Summary:	A Concurrent Versioning System
 Name:		subversion
-Version:	1.7.10
+Version:	1.7.11
 Release:	1
 Epoch:		2
 License:	BSD CC2.0
@@ -81,7 +81,7 @@ BuildRequires:	pkgconfig(neon)
 BuildRequires:	apache-devel >= %{apache_version}
 BuildRequires:	pkgconfig(apr-1)
 BuildRequires:	pkgconfig(apr-util-1)
-BuildRequires:	libxslt-proc
+BuildRequires:	pkgconfig(libexslt)
 BuildRequires:	docbook-style-xsl
 BuildRequires:	doxygen
 BuildRequires:	pkgconfig(sqlite3)
