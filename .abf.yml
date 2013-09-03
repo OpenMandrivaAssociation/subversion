@@ -1,6 +1,8 @@
 removed_sources:
   subversion-1.7.10.tar.bz2: a4f3de0a13b034b0eab4d35512c6c91a4abcf4f5
-sources:
   subversion-1.7.11.tar.bz2: d82e187803043b74c072cd5a861ac02e4a027684
+sources:
   subversion-1.7.11.tar.bz2.asc: 45b64d7accce40e3a2496ea884f24a82b2d9e08f
+  subversion-1.7.13.tar.bz2: 844bb756ec505edaa12b9610832bcd21567139f1
+  subversion-1.7.13.tar.bz2.asc: ebb21b57c82af9df06c17785bc429a2b47a5f95d
   svn-book-html-chunk.tar.bz2: ad9ae57c45b210d1882070b33e1cd3f10b87b149

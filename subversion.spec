@@ -19,31 +19,21 @@
 %define _requires_exceptions devel(libneon
 %endif
 
-%define build_python 1
-%{?_without_python: %{expand: %%global build_python 0}}
+%bcond_without	python
+%bcond_without	ruby
+%ifarch %{ix86} x86_64
+%bcond_without	java
+%endif
+%ifarch %arm
+%bcond_with  java
+%endif
+%bcond_without	perl
+%bcond_without	gnome_keyring
+%bcond_without	kwallet
+%bcond_with	test
+%bcond_with	debug
 
-%define build_ruby 1
-%{?_without_ruby: %{expand: %%global build_ruby 0}}
-
-%define build_java 1
-%{?_with_java: %{expand: %%global build_java 1}}
-
-%define build_perl 1
-%{?_without_perl: %{expand: %%global build_perl 0}}
-
-%define build_gnome_keyring 1
-%{?_without_gnome_keyring: %{expand: %%global build_gnome_keyring 0}}
-
-%define build_kwallet 1
-%{?_without_kwallet: %{expand: %%global build_kwallet 0}}
-
-%define build_test 0
-%{?_with_test: %{expand: %%global build_test 1}}
-
-%define with_debug 0
-%{?_with_debug: %{expand: %%global with_debug 1}}
-
-%if %{build_java}
+%if %{with java}
 # We have the non-major symlink also in this package (due to java design),
 # so we only have %api in package name.
 %define svnjavahl_api 1
@@ -51,12 +41,12 @@
 %endif
 
 %ifarch %mips %arm
-%define build_java 0
+%define with java 0
 %endif
 
 Summary:	A Concurrent Versioning System
 Name:		subversion
-Version:	1.7.11
+Version:	1.7.13
 Release:	1
 Epoch:		2
 License:	BSD CC2.0
@@ -89,7 +79,7 @@ BuildRequires:	krb5-devel
 BuildRequires:	magic-devel
 # Swig is runtime only
 BuildRequires:	swig >= 1.3.27
-# needs this despite build_ruby 0
+# needs this despite with ruby 0
 BuildRequires:	ruby
 BuildRequires:	ruby-devel
 BuildRequires:	ruby-rdoc
@@ -137,7 +127,7 @@ Group:		System/Libraries
 %description -n	%{libsvn}
 Subversion common libraries
 
-%if %{build_gnome_keyring}
+%if %{with gnome_keyring}
 %package -n	%{libsvngnomekeyring}
 Summary:	gnome-keyring support for svn
 Group:		System/Libraries
@@ -149,7 +139,7 @@ Requires:	gnome-keyring >= 2.26.1
 Subversion libraries that allow interaction with the gnome-keyring daemon
 %endif
 
-%if %{build_kwallet}
+%if %{with kwallet}
 %package -n	%{libsvnkwallet}
 Summary:	kwallet support for svn
 Group:		System/Libraries
@@ -202,7 +192,7 @@ project.  It has not released its own package yet, but you can
 find it at http://cvs2svn.tigris.org/
 
 
-%if %{build_python}
+%if %{with python}
 %package -n	python-svn
 Summary:	Python bindings for Subversion
 Group:		Development/Python
@@ -218,7 +208,7 @@ This package contains the files necessary to use the subversion
 library functions within python scripts.
 %endif
 
-%if %{build_ruby}
+%if %{with ruby}
 %package -n	ruby-svn
 Summary:	Ruby bindings for Subversion
 Group:		Development/Ruby
@@ -231,7 +221,7 @@ This package contains the files necessary to use the subversion
 library functions within ruby scripts.
 %endif
 
-%if %{build_java}
+%if %{with java}
 %package -n	%{libsvnjavahl}
 Summary:	Svn Java bindings library
 Group:		System/Libraries
@@ -260,7 +250,7 @@ This package contains the files necessary to use the subversion
 library functions from Java.
 %endif
 
-%if %{build_perl}
+%if %{with perl}
 %package -n	perl-SVN
 Summary:	Perl bindings for Subversion
 Group:		Development/Perl
@@ -279,27 +269,27 @@ library functions within perl scripts.
 Summary:	Subversion headers/libraries for development
 Group:		Development/C
 Provides:	libsvn-devel = %{EVRD}
-%if %{build_perl}
+%if %{with perl}
 Requires:	perl-SVN >= %{EVRD}
 Obsoletes:	perl-SVN-devel < 2:1.5.2-2
 Provides:	per-SVN-devel = %{EVRD}
 %endif
-%if %{build_perl}
+%if %{with perl}
 Requires:	python-svn >= %{EVRD}
 Obsoletes:	python-svn-devel < 2:1.5.2-2
 Provides:	python-svn-devel = %{EVRD}
 %endif
-%if %{build_ruby}
+%if %{with ruby}
 Requires:	ruby-svn >= %{EVRD}
 Obsoletes:	ruby-svn-devel < 2:1.5.2-2
 Provides:	ruby-svn-devel = %{EVRD}
 %endif
 Requires:	%{libsvn} >= %{EVRD}
 Requires:	neon-devel
-%if %{build_gnome_keyring}
+%if %{with gnome_keyring}
 Requires:	%{libsvngnomekeyring} >= %{EVRD}
 %endif
-%if %{build_kwallet}
+%if %{with kwallet}
 Requires:	%{libsvnkwallet} >= %{EVRD}
 %endif
 
@@ -383,7 +373,7 @@ cp %{SOURCE3} .
 %build
 %serverbuild
 
-%if %{build_java}
+%if %{with java}
 export JAVADIR=%{_jvmdir}/java
 export JAVA_HOME=%{_jvmdir}/java
 %endif
@@ -399,19 +389,19 @@ export JAVA_HOME=%{_jvmdir}/java
     --disable-mod-activation \
     --with-swig=%{_prefix} \
     --disable-static \
-%if %{with_debug}
+%if %{with debug}
     --enable-maintainer-mode \
     --enable-debug \
 %endif
-%if %{build_java}
+%if %{with java}
     --enable-javahl \
     --with-jdk=%{_jvmdir}/java \
     --with-junit=%{_javadir}/junit.jar \
 %endif
-%if %{build_gnome_keyring}
+%if %{with gnome_keyring}
     --with-gnome-keyring \
 %endif
-%if %build_kwallet
+%if %with kwallet
     --with-kwallet \
 %endif
     --enable-shared \
@@ -422,41 +412,41 @@ export JAVA_HOME=%{_jvmdir}/java
 
 %make all
 
-%if %{build_python}
+%if %{with python}
 make swig-py swig_pydir=%{py_platsitedir}/libsvn swig_pydir_extra=%{py_sitedir}/svn
 %endif
 
-%if %{build_perl}
+%if %{with perl}
 make swig-pl
 pushd  subversion/bindings/swig/perl/native
 	perl Makefile.PL
 popd
 %endif
 
-%if %{build_ruby}
+%if %{with ruby}
 make swig-rb
 %endif
 
-%if %{build_java}
+%if %{with java}
 make javahl
 %endif
 
 %check
-%if %{build_test}
+%if %{with test}
 make check
 %endif
 
 %install
 %makeinstall_std
 
-%if %{build_python}
+%if %{with python}
 %makeinstall_std install-swig-py swig_pydir=%{py_platsitedir}/libsvn swig_pydir_extra=%{py_sitedir}/svn
 # Precompile python
 %py_compile %{buildroot}/%{py_platsitedir}/libsvn
 %py_compile %{buildroot}/%{py_sitedir}/svn
 %endif
 
-%if %{build_perl}
+%if %{with perl}
 %makeinstall_std install-swig-pl-lib
 pushd subversion/bindings/swig/perl/native/
 perl Makefile.PL
@@ -464,10 +454,10 @@ perl Makefile.PL
 popd
 %endif
 
-%if %{build_ruby}
+%if %{with ruby}
 %makeinstall_std install-swig-rb
 %endif
-%if %{build_java}
+%if %{with java}
 %makeinstall_std install-javahl
 
 %__mkdir_p %{buildroot}%{_javadir}
@@ -477,7 +467,7 @@ popd
 %{_bindir}/chrpath -d %{buildroot}%{_libdir}/libsvnjavahl-1.so
 %endif
 
-%if %{build_perl}
+%if %{with perl}
 # perl bindings
 make pure_vendor_install -C subversion/bindings/swig/perl/native DESTDIR=%{buildroot}
 %endif
@@ -647,14 +637,14 @@ fi
 %doc doc/user/*.html
 %doc doc/user/*.txt
 
-%if %{build_gnome_keyring}
+%if %{with gnome_keyring}
 %files -n %{libsvngnomekeyring}
 # list all ra libs to make sure we don't miss any
 # in a bogus build
 %{_libdir}/libsvn_auth_gnome_keyring-1.so.0*
 %endif
 
-%if %{build_kwallet}
+%if %{with kwallet}
 %files -n %{libsvnkwallet}
 # list all ra libs to make sure we don't miss any
 # in a bogus build
@@ -698,14 +688,14 @@ fi
 %{_mandir}/man1/svndumpfilter.1*
 %{_mandir}/man1/svnrdump.1*
 
-%if %{build_ruby}
+%if %{with ruby}
 %files -n ruby-svn
 %{ruby_sitearchdir}/svn
 %{ruby_sitelibdir}/*/*.rb
 %{_libdir}/libsvn_swig_ruby*.so.*
 %endif
 
-%if %{build_python}
+%if %{with python}
 %files -n python-svn
 %doc tools/examples/*.py subversion/bindings/swig/INSTALL subversion/bindings/swig/NOTES
 %{_libdir}/libsvn_swig_py*.so.*
@@ -713,7 +703,7 @@ fi
 %{py_platsitedir}/libsvn
 %endif
 
-%if %{build_java}
+%if %{with java}
 %files -n %{libsvnjavahl}
 %{_libdir}/libsvnjavahl-%{svnjavahl_api}.*
 
@@ -723,7 +713,7 @@ fi
 %{_javadir}/svn-javahl-%{version}.jar
 %endif
 
-%if %{build_perl}
+%if %{with perl}
 %files -n perl-SVN
 %doc subversion/bindings/swig/INSTALL subversion/bindings/swig/NOTES
 %{_libdir}/libsvn_swig_perl*.so.*
@@ -737,7 +727,7 @@ fi
 %doc tools/examples/minimal_client.c
 %{_includedir}/subversion*/*
 %{_libdir}/libsvn*.so
-%if %{build_java}
+%if %{with java}
 %exclude %{_libdir}/libsvnjavahl*
 %endif
 
@@ -1356,7 +1346,7 @@ fi
 
   + Helio Chissini de Castro <helio@mandriva.com>
     - Subversion now requires swig >= .27
-    - Oden patch to match build_perl switch
+    - Oden patch to match with perl switch
 
 * Mon Nov 28 2005 Helio Chissini de Castro <helio@mandriva.com> 1.3.0-3mdk
 + Revision: 1205
