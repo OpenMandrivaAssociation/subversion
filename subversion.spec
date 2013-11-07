@@ -47,7 +47,7 @@
 Summary:	A Concurrent Versioning System
 Name:		subversion
 Version:	1.7.13
-Release:	1
+Release:	2
 Epoch:		2
 License:	BSD CC2.0
 Group:		Development/Other
@@ -59,6 +59,8 @@ Source3:	svnserve.sysconf
 Source5:	%{name}-1.3.0-global-config
 Source6:	%{name}-1.3.0-global-servers
 Source7:	http://svnbook.red-bean.com/nightly/en/svn-book-html-chunk.tar.bz2
+# Icon for dav_svn module
+Source8:	%{name}.png
 Patch0:		subversion-1.7.0-rc3-no_tests.diff
 Patch1:		svn-ruby-1.9-fixes.patch
 Patch2:		svn-update-ruby-tests.patch
@@ -539,6 +541,10 @@ install -d -m755 %{buildroot}%{_datadir}/%{name}-%{version}/repo-tools/xslt
 install -m 644 tools/xslt/svnindex.css %{buildroot}%{_datadir}/%{name}-%{version}/repo-tools/xslt
 install -m 644 tools/xslt/svnindex.xsl %{buildroot}%{_datadir}/%{name}-%{version}/repo-tools/xslt
 
+# install a nice icon for web usage
+install -d %{buildroot}/srv/www/icons
+install -m644 %{SOURCE8} %{buildroot}/srv/www/icons/subversion.png
+
 # fix a missing file...
 ln -sf libsvn_diff-1.so.0.0.0 %{buildroot}%{_libdir}/libsvn_diff.so
 
@@ -737,6 +743,7 @@ fi
 %attr(0644,root,root) %config(noreplace) %{_sysconfdir}/httpd/modules.d/147_mod_authz_svn.conf
 %attr(0755,root,root) %{_libdir}/apache/mod_dav_svn.so
 %attr(0755,root,root) %{_libdir}/apache/mod_authz_svn.so
+%attr(0644,root,root) /srv/www/icons/%{name}.png
 
 %files -n apache-mod_dontdothat
 %doc tools/server-side/mod_dontdothat/README
