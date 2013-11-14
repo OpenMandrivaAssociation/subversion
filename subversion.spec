@@ -47,7 +47,7 @@ Patch0: subversion-1.8.3-underlink.diff
 
 BuildRequires:  autoconf automake libtool
 BuildRequires:  chrpath
-BuildRequires:  python
+BuildRequires:  python-devel
 BuildRequires:  texinfo
 BuildRequires:  db-devel
 BuildRequires:  pkgconfig(neon)
