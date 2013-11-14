@@ -1,0 +1,30 @@
+diff -Naur subversion-1.8.3/build.conf subversion-1.8.3.oden/build.conf
+--- subversion-1.8.3/build.conf	2013-08-21 01:05:19.000000000 +0200
++++ subversion-1.8.3.oden/build.conf	2013-10-14 10:59:16.153219645 +0200
+@@ -171,7 +171,7 @@
+ description = Subversion Revision Extractor
+ type = exe
+ path = subversion/svnversion
+-libs = libsvn_wc libsvn_subr apriconv apr
++libs = libsvn_wc libsvn_subr libsvn_diff apriconv apr
+ install = bin
+ manpages = subversion/svnversion/svnversion.1
+ 
+@@ -972,7 +972,7 @@
+ path = subversion/tests/libsvn_client
+ sources = client-test.c
+ install = test
+-libs = libsvn_test libsvn_client libsvn_wc libsvn_repos libsvn_ra libsvn_fs libsvn_delta libsvn_subr apriconv apr
++libs = libsvn_test libsvn_client libsvn_wc libsvn_repos libsvn_ra libsvn_fs libsvn_delta libsvn_subr libsvn_diff apriconv apr
+ 
+ # ----------------------------------------------------------------------------
+ # Tests for libsvn_diff
+@@ -1014,7 +1014,7 @@
+ path = subversion/tests/libsvn_ra_local
+ sources = ra-local-test.c
+ install = test
+-libs = libsvn_test libsvn_ra_local libsvn_ra libsvn_fs libsvn_delta libsvn_subr
++libs = libsvn_test libsvn_repos libsvn_ra_local libsvn_ra libsvn_fs libsvn_delta libsvn_subr
+        apriconv apr
+ 
+ # ----------------------------------------------------------------------------
