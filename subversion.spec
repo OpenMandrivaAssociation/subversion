@@ -47,7 +47,7 @@
 Summary:	A Concurrent Versioning System
 Name:		subversion
 Version:	1.7.13
-Release:	2
+Release:	3
 Epoch:		2
 License:	BSD CC2.0
 Group:		Development/Other
