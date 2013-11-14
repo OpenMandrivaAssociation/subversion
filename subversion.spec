@@ -312,7 +312,6 @@ find it at http://cvs2svn.tigris.org/
 %package -n	python-svn
 Summary: 	Python bindings for Subversion
 Group:		Development/Python
-%py_requires -d
 Provides:	python-subversion = %{version}-%{release}
 Requires:	python
 # soname didn't change between 1.3.x and 1.4.x, but we
