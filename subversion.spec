@@ -28,7 +28,7 @@
 
 Name: subversion
 Version: 1.8.4
-Release: 2
+Release: 3
 Epoch: 2
 Summary: A Concurrent Versioning System
 License: Apache License
