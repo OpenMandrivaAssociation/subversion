@@ -74,7 +74,7 @@ Patch1:		svn-ruby-1.9-fixes.patch
 Patch2:		svn-update-ruby-tests.patch
 BuildRequires:	autoconf automake libtool
 BuildRequires:	chrpath
-BuildRequires:	python
+BuildRequires:	python-devel
 BuildRequires:	texinfo
 BuildRequires:	db-devel
 BuildRequires:	pkgconfig(neon)
