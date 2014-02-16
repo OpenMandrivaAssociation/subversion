@@ -27,8 +27,8 @@
 %endif
 
 Name: subversion
-Version: 1.8.4
-Release: 5
+Version: 1.8.5
+Release: 1
 Epoch: 2
 Summary: A Concurrent Versioning System
 License: Apache License
