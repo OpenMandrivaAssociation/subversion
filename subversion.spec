@@ -3,9 +3,10 @@
 %define _build_pkgcheck_srpm %{nil}
 
 %define apache_version 2.4.0
-%define libsvn %mklibname svn 1
-%define libsvngnomekeyring %mklibname svn-gnome-keyring 0
-%define libsvnkwallet %mklibname svn-kwallet 0
+%define api 1
+%define major 0
+%define libname %mklibname svn %{api} %{major}
+%define devname %mklibname svn -d
 
 # Java requires devel symlinks in non-devel packages due to design
 # (System.loadLibrary). Do not add -devel dependencies.
@@ -26,53 +27,53 @@
 %bcond_with  java
 %endif
 
-Name: subversion
-Version: 1.8.5
-Release: 1
-Epoch: 2
-Summary: A Concurrent Versioning System
-License: Apache License
-Group: Development/Tools
-URL: http://subversion.apache.org/
-Source0: http://www.apache.org/dist/subversion/%{name}-%{version}.tar.bz2
-Source1: http://www.apache.org/dist/subversion/%{name}-%{version}.tar.bz2.asc
-Source2: mod_dav_svn.conf
-Source3: subversion.conf
-Source5: %{name}-1.3.0-global-config
-Source6: %{name}-1.3.0-global-servers
-Source7: http://svnbook.red-bean.com/nightly/en/svn-book-html-chunk.tar.bz2
-Source8: svnserve.service
-Source9: svnserve-tmpfiles.conf
-Patch0: subversion-1.8.3-underlink.diff
+Summary:	A Concurrent Versioning System
+Name:		subversion
+Epoch:		2
+Version:	1.8.5
+Release:	1
+License:	Apache License
+Group:		Development/Tools
+Url:		http://subversion.apache.org/
+Source0:	http://www.apache.org/dist/subversion/%{name}-%{version}.tar.bz2
+Source1:	http://www.apache.org/dist/subversion/%{name}-%{version}.tar.bz2.asc
+Source2:	mod_dav_svn.conf
+Source3:	subversion.conf
+Source5:	%{name}-1.3.0-global-config
+Source6:	%{name}-1.3.0-global-servers
+Source7:	http://svnbook.red-bean.com/nightly/en/svn-book-html-chunk.tar.bz2
+Source8:	svnserve.service
+Source9:	svnserve-tmpfiles.conf
+Patch0:		subversion-1.8.3-underlink.diff
 
-BuildRequires:  autoconf automake libtool
-BuildRequires:  chrpath
-BuildRequires:  python-devel
-BuildRequires:  texinfo
-BuildRequires:  db-devel
-BuildRequires:  pkgconfig(neon)
-BuildRequires:  apache-devel >= %{apache_version}
-BuildRequires:  pkgconfig(apr-1)
-BuildRequires:  pkgconfig(apr-util-1)
-BuildRequires:  pkgconfig(libexslt)
-BuildRequires:  docbook-style-xsl
-BuildRequires:  doxygen
-BuildRequires:  pkgconfig(sqlite3)
-BuildRequires:  krb5-devel
-BuildRequires:  magic-devel
-BuildRequires:  pkgconfig(serf-1)
+BuildRequires:	chrpath
+BuildRequires:	docbook-style-xsl
+BuildRequires:	doxygen
+BuildRequires:	libtool
+BuildRequires:	texinfo
+BuildRequires:	db-devel
+BuildRequires:	apache-devel >= %{apache_version}
+BuildRequires:	krb5-devel
+BuildRequires:	magic-devel
+BuildRequires:	pkgconfig(apr-1)
+BuildRequires:	pkgconfig(apr-util-1)
+BuildRequires:	pkgconfig(libexslt)
+BuildRequires:	pkgconfig(neon)
+BuildRequires:	pkgconfig(python)
+BuildRequires:	pkgconfig(sqlite3)
+BuildRequires:	pkgconfig(serf-1)
 # Swig is runtime only
-BuildRequires:  swig >= 1.3.27
+BuildRequires:	swig >= 1.3.27
 # needs this despite with ruby 0
-BuildRequires:  ruby
-BuildRequires:  ruby-devel
-BuildRequires:  ruby-rdoc
-
+BuildRequires:	ruby
+BuildRequires:	ruby-devel
+BuildRequires:	ruby-rdoc
 
 Provides:	%{name}-ra-method = %{EVRD}
 Provides:	%{name}-client-tools = %{EVRD}
 Provides:	svn = %{EVRD}
-Requires:	%{libsvn} >= %{EVRD}
+# MD because of the sysconfig files moved to this pkg
+Conflicts:	%{_lib}svn1 < 2:1.8.5-2
 
 %description
 Subversion (SVN) is a concurrent version control system which enables one or
@@ -89,14 +90,12 @@ This package contains the client, if you're looking for the server end
 of things you want %{name}-server.
 
 %files -f %{name}.lang
+# MD moved from lib pkg
+%dir %{_sysconfdir}/subversion
+%config(noreplace) %{_sysconfdir}/subversion/*
 %{_bindir}/svn
 %{_bindir}/svnversion
 %{_bindir}/showchange*
-# Contrib was removed in subversion-1.7.x
-# %%{_bindir}/search-svnlog*
-# %%{_bindir}/svn_all_diffs*
-# %%{_bindir}/svn_load_dirs*
-# %%{_bindir}/svn-log*
 %{_bindir}/svnlook
 %{_mandir}/man1/svn.*
 %{_mandir}/man1/svnlook.*
@@ -108,21 +107,11 @@ of things you want %{name}-server.
 #--------------------------------------------------------------------------
 
 %package        doc
-Summary:        Subversion Documenation
-Group:          Documentation
+Summary:	Subversion Documenation
+Group:		Documentation
+BuildArch:	noarch
 
 %description    doc
-Subversion is a concurrent version control system which enables
-one or more users to collaborate in developing and maintaining a
-hierarchy of files and directories while keeping a history of all
-changes. Subversion only stores the differences between versions,
-instead of every complete file. Subversion also keeps a log of
-who, when, and why changes occurred.
-
-As such it basically does the same thing CVS does (Concurrent
-Versioning System) but has major enhancements compared to CVS and
-fixes a lot of the annoyances that CVS users face.
-
 This package contains the subversion book and design info files.
 
 %files doc
@@ -130,72 +119,121 @@ This package contains the subversion book and design info files.
 %doc doc/user/*.html
 %doc doc/user/*.txt
 
-#--------------------------------------------------------------------------
+#-------------------------------------------------------------------------
 
-%package -n	%{libsvn}
-Summary: 	Subversion libraries
+%define svnlibs svn_client svn_delta svn_diff svn_fs svn_fs_fs svn_fs_util svn_repos svn_subr svn_ra svn_ra_local svn_ra_serf svn_ra_svn svn_wc
+
+%package -n	%{libname}
+Summary:	Subversion libraries
 Group:		System/Libraries
+Obsoletes:	%{_lib}svn0 < 2:1.7.13-4
+Obsoletes:	%{_lib}svn1 < 2:1.8.5-2
 
-%description -n	%{libsvn}
-Subversion common libraries
+%description -n	%{libname}
+Subversion common libraries.
 
-%files -n	%{libsvn}
-# list all ra libs to make sure we don't miss any
-# in a bogus build
-%{_libdir}/libsvn_ra-1.so.*
-%{_libdir}/libsvn_ra_local-1.so.*
-%{_libdir}/libsvn_ra_svn-1.so.*
-%{_libdir}/libsvn_client*so.*
-%{_libdir}/libsvn_wc-*so.*
-%{_libdir}/libsvn_delta-*so.*
-%{_libdir}/libsvn_subr-*so.*
-%{_libdir}/libsvn_diff-*so.*
-%{_libdir}/libsvn_fs*.so.*
-%{_libdir}/libsvn_repos-*.so.*
-%{_libdir}/libsvn_ra_serf-*so.*
-%dir %{_sysconfdir}/subversion
-%config(noreplace) %{_sysconfdir}/subversion/*
+%files -n %{libname}
+%{expand:%(for lib in %svnlibs; do cat <<EOF
+%{_libdir}/lib$lib-%{api}.so.%{major}*
+EOF
+done)}
 
 #---------------------------------------------------------------------------
 
+%package -n %{devname}
+Summary:	Subversion headers/libraries for development
+Group:		Development/C
+Provides:	%{name}-devel = %{EVRD}
+Requires:	%{libname} = %{EVRD}
+
+%description -n %{devname}
+This package contains the header files and linker scripts for
+subversion libraries.
+
+%files -n %{devname}
+%doc tools/examples/minimal_client.c
+%{_includedir}/subversion-1/*
+%{expand:%(for lib in %svnlibs; do cat <<EOF
+%{_libdir}/lib$lib-%{api}.so
+EOF
+done)}
+# MD should we remove this?
+%{_libdir}/libsvn_diff.so
+
+%if %{with java}
+%exclude %{_libdir}/libsvnjavahl*
+%endif
+
+#----------------------------------------------------------------
+
 %if %{with gnome_keyring}
+%define libgnomekeyring %mklibname svn_auth_gnome_keyring %{api} %{major}
+%define devgnomekeyring %mklibname svn_auth_gnome_keyring -d
 
-%package -n	%{libsvngnomekeyring}
-Summary: 	gnome-keyring support for svn
+%package -n	%{libgnomekeyring}
+Summary:	gnome-keyring support for svn
 Group:		System/Libraries
-BuildRequires:	pkgconfig(gnome-keyring-1)
 BuildRequires:	pkgconfig(dbus-1) >= 1.2.4.4permissive
+BuildRequires:	pkgconfig(gnome-keyring-1)
 Requires:	gnome-keyring >= 2.26.1
+Obsoletes:	%{_lib}svn-gnome-keyring0 < 2:1.8.5-2
 
-%description -n	%{libsvngnomekeyring}
-Subversion libraries that allow interaction with the gnome-keyring daemon
+%description -n	%{libgnomekeyring}
+Subversion library that allow interaction with the gnome-keyring daemon.
 
-%files -n	%{libsvngnomekeyring}
-# list all ra libs to make sure we don't miss any
-# in a bogus build
-%{_libdir}/libsvn_auth_gnome_keyring-1.so.0*
+%files -n %{libgnomekeyring}
+%{_libdir}/libsvn_auth_gnome_keyring-%{api}.so.%{major}*
 
+%package -n	%{devgnomekeyring}
+Summary:	Subversion headers/libraries for development
+Group:		Development/GNOME and GTK+
+Requires:	%{name}-devel = %{EVRD}
+Requires:	%{libgnomekeyring} = %{EVRD}
+Conflicts:	%{name}-devel < 2:1.6.17-2
+Obsoletes:	%{name}-gnome-keyring-devel < 2:1.8.5-2
+
+%description -n %{devgnomekeyring}
+This package contains the header files and linker scripts for the
+subversion library using gnome-keyring auth.
+
+%files -n %{devgnomekeyring}
+%{_libdir}/libsvn_auth_gnome_keyring-%{api}.so
 %endif
 
 #--------------------------------------------------------------------------
 
 %if %{with kwallet}
+%define libkwallet %mklibname svn_auth_kwallet %{api} %{major}
+%define devkwallet %mklibname svn_auth_kwallet -d
 
-%package -n	%{libsvnkwallet}
-Summary: 	kwallet support for svn
+%package -n	%{libkwallet}
+Summary:	kwallet support for svn
 Group:		System/Libraries
 BuildRequires:	kdelibs4-devel
-BuildRequires:	pkgconfig(dbus-1) >= 1.2.4.4permissive
+BuildRequires:	pkgconfig(dbus-1)
 Requires:	kwallet
+Obsoletes:	%{_lib}svn-kwallet0 < 2:1.8.5-2
 
-%description -n	%{libsvnkwallet}
-Subversion libraries that allow interaction with the kwallet daemon.
+%description -n	%{libkwallet}
+Subversion library that allow interaction with the kwallet daemon.
 
-%files -n	%{libsvnkwallet}
-# list all ra libs to make sure we don't miss any
-# in a bogus build
-%{_libdir}/libsvn_auth_kwallet-1.so.0*
+%files -n	%{libkwallet}
+%{_libdir}/libsvn_auth_kwallet-%{api}.so.%{major}*
 
+%package -n 	%{devkwallet}
+Summary:	Subversion headers/libraries for development
+Group:		Development/KDE and Qt
+Requires:	%{name}-devel = %{EVRD}
+Requires:	%{libkwallet} = %{EVRD}
+Conflicts:	%{name}-devel < 2:1.6.17-2
+Obsoletes:	%{name}-kwallet-devel < 2:1.8.5-2
+
+%description -n	%{devkwallet}
+This package contains the header files and linker scripts for the
+subversion library using kwallet auth.
+
+%files -n %{devkwallet}
+%{_libdir}/libsvn_auth_kwallet-%{api}.so
 %endif
 
 #--------------------------------------------------------------------------
@@ -204,27 +242,12 @@ Subversion libraries that allow interaction with the kwallet daemon.
 Summary:	Subversion Server
 Group:		System/Servers
 Requires:	%{name} = %{EVRD}
-Requires(pre):	rpm-helper
-Requires(preun):	rpm-helper
-Requires(postun): rpm-helper
+Requires(pre,preun,postun,post):	rpm-helper
 Requires(post):	sed
-Requires(post):	rpm-helper
 Requires(post):	systemd
-# soname didn't change between 1.3.x and 1.4.x, but we
-# need the right one...
-Requires:	%{libsvn} = %{epoch}:%{version}
 
 %description server
-This package contains a myriad of tools for subversion server
-and repository admins:
-  * hot-backup makes a backup of a svn repo without stopping
-  * mirror_dir_through_svn.cgi
-  * various hook scripts
-  * xslt example
-
-Note that cvs2svn has moved out of subversion and is a separate
-project.  It has not released its own package yet, but you can
-find it at http://cvs2svn.tigris.org/
+This package contains the subversion server and configuration files. 
 
 %pre server
 %_pre_useradd svn /var/lib/svn /bin/false
@@ -262,9 +285,6 @@ fi
 Summary:	Subversion Repo/Server Tools
 Group:		Development/Tools
 Requires:	%{name} = %{EVRD}
-# soname didn't change between 1.3.x and 1.4.x, but we
-# need the right one...
-Requires:	%{libsvn} = %{epoch}:%{version}
 
 %description tools
 This package contains a myriad of tools for subversion server
@@ -285,20 +305,20 @@ find it at http://cvs2svn.tigris.org/
 %{_bindir}/svndumpfilter
 %{_bindir}/svnrdump
 %{_bindir}/svnmucc
-%dir %_libexecdir/svn-tools
-%_libexecdir/svn-tools/diff
-%_libexecdir/svn-tools/diff3
-%_libexecdir/svn-tools/diff4
-%_libexecdir/svn-tools/fsfs-access-map
-%_libexecdir/svn-tools/fsfs-reorg
-%_libexecdir/svn-tools/fsfs-stats
-%_libexecdir/svn-tools/svnauthz
-%_libexecdir/svn-tools/svnauthz-validate
-%_libexecdir/svn-tools/svn-bench
-%_libexecdir/svn-tools/svnmucc
-%_libexecdir/svn-tools/svn-populate-node-origins-index
-%_libexecdir/svn-tools/svnraisetreeconflict
-%_libexecdir/svn-tools/svn-rep-sharing-stats
+%dir %{_libexecdir}/svn-tools
+%{_libexecdir}/svn-tools/diff
+%{_libexecdir}/svn-tools/diff3
+%{_libexecdir}/svn-tools/diff4
+%{_libexecdir}/svn-tools/fsfs-access-map
+%{_libexecdir}/svn-tools/fsfs-reorg
+%{_libexecdir}/svn-tools/fsfs-stats
+%{_libexecdir}/svn-tools/svnauthz
+%{_libexecdir}/svn-tools/svnauthz-validate
+%{_libexecdir}/svn-tools/svn-bench
+%{_libexecdir}/svn-tools/svnmucc
+%{_libexecdir}/svn-tools/svn-populate-node-origins-index
+%{_libexecdir}/svn-tools/svnraisetreeconflict
+%{_libexecdir}/svn-tools/svn-rep-sharing-stats
 %{_datadir}/%{name}-%{version}/repo-tools
 %{_mandir}/man1/svnadmin.1*
 %{_mandir}/man1/svndumpfilter.1*
@@ -308,38 +328,46 @@ find it at http://cvs2svn.tigris.org/
 #--------------------------------------------------------------------------
 
 %if %{with python}
-
 %package -n	python-svn
-Summary: 	Python bindings for Subversion
+Summary:	Python bindings for Subversion
 Group:		Development/Python
 Provides:	python-subversion = %{version}-%{release}
 Requires:	python
-# soname didn't change between 1.3.x and 1.4.x, but we
-# need the right one...
-Requires:	%{libsvn} = %{epoch}:%{version}
 
 %description -n	python-svn
 This package contains the files necessary to use the subversion
 library functions within python scripts.
 
 %files -n	python-svn
-%{_libdir}/libsvn_swig_py*.so.*
+%{_libdir}/libsvn_swig_py-%{api}.so.%{major}*
 %{py_sitedir}/svn
 %{py_platsitedir}/libsvn
 %doc tools/examples/*.py subversion/bindings/swig/INSTALL subversion/bindings/swig/NOTES
 
+%package -n	python-svn-devel
+Summary:	Subversion headers/libraries for development
+Group:		Development/Python
+Requires:	%{name}-devel = %{EVRD}
+Requires:	python-svn = %{EVRD}
+Obsoletes:	python-svn-devel < 2:1.5.2-2
+Conflicts:	%{name}-devel < 2:1.6.17-2
+
+%description -n	python-svn-devel
+This package contains the header files and linker scripts for
+subversion libraries using perl.
+
+%files -n	python-svn-devel
+%{_libdir}/libsvn_swig_py-%{api}.so
 %endif
 
 #--------------------------------------------------------------------------
 
 %if %{with ruby}
-
 %package -n	ruby-svn
-Summary: 	Ruby bindings for Subversion
+Summary:	Ruby bindings for Subversion
 Group:		Development/Ruby
 BuildRequires:	ruby-devel
 Requires:	ruby
-Requires:	%{libsvn} = %{epoch}:%{version}
 Provides:	ruby-subversion = %{EVRD}
 
 %description -n	ruby-svn
@@ -349,8 +377,21 @@ library functions within ruby scripts.
 %files -n	ruby-svn
 %{ruby_sitearchdir}/svn
 %{ruby_sitelibdir}/*/*.rb
-%{_libdir}/libsvn_swig_ruby*.so.*
+%{_libdir}/libsvn_swig_ruby-%{api}.so.%{major}*
 
+%package -n	ruby-svn-devel
+Summary:	Subversion headers/libraries for development
+Group:		Development/Ruby
+Requires:	ruby-svn = %{EVRD}
+Obsoletes:	ruby-svn-devel < 2:1.5.2-2
+Conflicts:	%{name}-devel < 2:1.6.17-2
+
+%description -n	ruby-svn-devel
+This package contains the header files and linker scripts for
+subversion libraries using perl.
+
+%files -n	ruby-svn-devel
+%{_libdir}/libsvn_swig_ruby-%{api}.so
 %endif
 
 #--------------------------------------------------------------------------
@@ -358,37 +399,32 @@ library functions within ruby scripts.
 %if %{with java}
 # We have the non-major symlink also in this package (due to java design),
 # so we only have %%api in package name.
-%define svnjavahl_api 1
-%define libsvnjavahl %mklibname svnjavahl %{svnjavahl_api}
+%define libsvnjavahl %mklibname svnjavahl %{api}
 
 %package -n	%{libsvnjavahl}
-Summary: 	Svn Java bindings library
+Summary:	Svn Java bindings library
 Group:		System/Libraries
-Conflicts:	subversion-devel < 2:1.6.0-3
-Obsoletes:	%{_lib}svnjavahl0 < 2:1.6.0-3
 
 %description -n	%{libsvnjavahl}
 Svn Java bindings library
 
 %files -n	%{libsvnjavahl}
-%{_libdir}/libsvnjavahl-%{svnjavahl_api}.*
+%{_libdir}/libsvnjavahl-%{api}.so*
 
 #--------------------------------------------------------------------------
 
 %package -n	svn-javahl
-Summary: 	Java bindings for Subversion
+Summary:	Java bindings for Subversion
 Group:		Development/Java
-Obsoletes:	java-svn < %{EVRD}
 Provides:	java-svn = %{EVRD}
 Provides:	java-subversion = %{EVRD}
 Provides:	subversion-javahl = %{EVRD}
 Requires:	%{name} = %{EVRD}
-Requires:	%{libsvn} = %{EVRD}
 Requires:	%{libsvnjavahl} = %{EVRD}
-BuildRequires:	java-devel
 BuildRequires:	ant
 BuildRequires:	java-rpmbuild >= 1.7.3-10
 BuildRequires:	junit
+BuildRequires:	java-devel
 
 %description -n	svn-javahl
 This package contains the files necessary to use the subversion
@@ -398,21 +434,17 @@ library functions from Java.
 %doc subversion/bindings/javahl/README
 %{_javadir}/svn-javahl.jar
 %{_javadir}/svn-javahl-%{version}.jar
-
 %endif
 
 #--------------------------------------------------------------------------
 
 %if %{with perl}
-
 %package -n	perl-SVN
-Summary: 	Perl bindings for Subversion
+Summary:	Perl bindings for Subversion
 Group:		Development/Perl
 BuildRequires:	perl-devel
 Requires:	%{name} = %{EVRD}
-Obsoletes:	perl-svn
 Provides:	perl-svn = %{EVRD}
-Requires:	%{libsvn} = %{epoch}:%{version}
 
 %description -n	perl-SVN
 This package contains the files necessary to use the subversion
@@ -420,65 +452,19 @@ library functions within perl scripts.
 
 %files -n	perl-SVN
 %doc subversion/bindings/swig/INSTALL subversion/bindings/swig/NOTES
-%{_libdir}/libsvn_swig_perl*.so.*
+%{_libdir}/libsvn_swig_perl-%{api}.so.%{major}*
 %{perl_vendorarch}/SVN
 %{perl_vendorarch}/auto/SVN
 %{perl_sitearch}/*
 %{_mandir}/man3/SVN::*.3*
 
-%endif
-
-#---------------------------------------------------------------
-
-%if %{with kwallet}
-
-%package	kwallet-devel
-Summary:	Subversion headers/libraries for development
-Group:		Development/KDE and Qt
-Requires:	%{name}-devel = %{EVRD}
-Requires:	%{libsvnkwallet} = %{EVRD}
-Conflicts:	%{name}-devel < 2:1.6.17-2
-
-%description kwallet-devel
-This package contains the header files and linker scripts for
-subversion libraries using kwallet auth.
-
-%files kwallet-devel
-%{_libdir}/libsvn_auth_kwallet-1.so
-
-%endif
-
-#-----------------------------------------------------------------
-
-%if %{with gnome_keyring}
-
-%package	gnome-keyring-devel
-Summary:	Subversion headers/libraries for development
-Group:		Development/GNOME and GTK+
-Requires:	%{name}-devel = %{EVRD}
-Requires:	%{libsvngnomekeyring} = %{EVRD}
-Conflicts:	%{name}-devel < 2:1.6.17-2
-
-%description gnome-keyring-devel
-This package contains the header files and linker scripts for
-subversion libraries using gnome-keyring auth
-
-%files gnome-keyring-devel
-%{_libdir}/libsvn_auth_gnome_keyring-1.so
-
-%endif
-
-#---------------------------------------------------------------
-
-%if %{with perl}
-
 %package -n	perl-svn-devel
-Summary: 	Subversion headers/libraries for development
+Summary:	Subversion headers/libraries for development
 Group:		Development/Perl
 Requires:	%{name}-devel = %{EVRD}
-Requires:	perl-SVN = %{epoch}:%{version}
+Requires:	perl-SVN = %{EVRD}
 Obsoletes:	perl-SVN-devel < 2:1.5.2-2
-Provides:	perl-SVN-devel = %{epoch}:%{version}
+Provides:	perl-SVN-devel = %{EVRD}
 Conflicts:	%{name}-devel < 2:1.6.17-2
 
 %description -n	perl-svn-devel
@@ -486,85 +472,7 @@ This package contains the header files and linker scripts for
 subversion libraries using perl.
 
 %files -n	perl-svn-devel
-%{_libdir}/libsvn_swig_perl-1.so
-
-%endif
-
-#----------------------------------------------------------------
-
-%if %{with python}
-
-%package -n	python-svn-devel
-Summary: 	Subversion headers/libraries for development
-Group:		Development/Python
-Requires:	%{name}-devel = %{EVRD}
-Requires:	python-svn = %{epoch}:%{version}
-Obsoletes:	python-svn-devel < 2:1.5.2-2
-Conflicts:	%{name}-devel < 2:1.6.17-2
-
-%description -n	python-svn-devel
-This package contains the header files and linker scripts for
-subversion libraries using perl.
-
-%files -n	python-svn-devel
-%{_libdir}/libsvn_swig_py-1.so
-
-%endif
-
-#-------------------------------------------------------------------
-
-%if %{with ruby}
-
-%package -n	ruby-svn-devel
-Summary: 	Subversion headers/libraries for development
-Group:		Development/Ruby
-Requires:	ruby-svn = %{epoch}:%{version}
-Obsoletes:	ruby-svn-devel < 2:1.5.2-2
-Conflicts:	%{name}-devel < 2:1.6.17-2
-
-%description -n	ruby-svn-devel
-This package contains the header files and linker scripts for
-subversion libraries using perl.
-
-%files -n	ruby-svn-devel
-%{_libdir}/libsvn_swig_ruby-1.so
-
-%endif
-
-#----------------------------------------------------------------
-
-%package	devel
-Summary:	Subversion headers/libraries for development
-Group:		Development/C
-Provides:	libsvn-devel = %{EVRD}
-Requires:	%{libsvn} = %{EVRD}
-
-
-%description devel
-This package contains the header files and linker scripts for
-subversion libraries.
-
-%files devel
-%doc tools/examples/minimal_client.c
-%{_includedir}/subversion-1/*
-%{_libdir}/libsvn_client-1.so
-%{_libdir}/libsvn_delta-1.so
-%{_libdir}/libsvn_diff-1.so
-%{_libdir}/libsvn_diff.so
-%{_libdir}/libsvn_fs-1.so
-%{_libdir}/libsvn_fs_fs-1.so
-%{_libdir}/libsvn_fs_base-1.so
-%{_libdir}/libsvn_fs_util-1.so
-%{_libdir}/libsvn_ra-1.so
-%{_libdir}/libsvn_ra_local-1.so
-%{_libdir}/libsvn_ra_svn-1.so
-%{_libdir}/libsvn_repos-1.so
-%{_libdir}/libsvn_subr-1.so
-%{_libdir}/libsvn_wc-1.so
-%{_libdir}/libsvn_ra_serf-1.so
-
-%if %{with java}
-%exclude %{_libdir}/libsvnjavahl*
+%{_libdir}/libsvn_swig_perl-%{api}.so
 %endif
 
 #----------------------------------------------------------------
@@ -576,17 +484,6 @@ Requires:	%{name}-tools = %{EVRD}
 Requires:	apache-mod_dav >= %{apache_version}
 
 %description -n	apache-mod_dav_svn
-Subversion is a concurrent version control system which enables
-one or more users to collaborate in developing and maintaining a
-hierarchy of files and directories while keeping a history of all
-changes. Subversion only stores the differences between versions,
-instead of every complete file. Subversion also keeps a log of
-who, when, and why changes occurred.
-
-As such it basically does the same thing CVS does (Concurrent
-Versioning System) but has major enhancements compared to CVS and
-fixes a lot of the annoyances that CVS users face.
-
 This package contains the apache server extension DSO for running
 a subversion server.
 
@@ -602,7 +499,7 @@ a subversion server.
 
 %prep
 %setup -q -a 7
-%patch0 -p1 -b .underlink
+%apply_patches
 
 # fix shellbang lines, #111498
 perl -pi -e 's|/usr/bin/env perl|%{_bindir}/perl|g' tools/hook-scripts/*.pl.in
@@ -636,35 +533,35 @@ export svn_cv_ruby_sitedir_archsuffix=""
 %endif
 
 %configure2_5x \
-   --localstatedir=/var/lib \
-   --with-apr_memcache=%{_prefix} \
-   --with-apxs=%{_bindir}/apxs \
-   --with-apache-libexecdir=%{_libdir}/apache/ \
-   --with-apr=%{_bindir}/apr-1-config \
-   --with-apr-util=%{_bindir}/apu-1-config \
-   --disable-mod-activation \
-   --with-swig=%{_prefix} \
-   --disable-static \
+	--localstatedir=/var/lib \
+	--with-apr_memcache=%{_prefix} \
+	--with-apxs=%{_bindir}/apxs \
+	--with-apache-libexecdir=%{_libdir}/apache/ \
+	--with-apr=%{_bindir}/apr-1-config \
+	--with-apr-util=%{_bindir}/apu-1-config \
+	--disable-mod-activation \
+	--with-swig=%{_prefix} \
+	--disable-static \
 %if %{with debug}
-   --enable-maintainer-mode \
-   --enable-debug \
+	--enable-maintainer-mode \
+	--enable-debug \
 %endif
 %if %{with java}
-   --enable-javahl \
-   --with-jdk=%{_jvmdir}/java \
-   --with-junit=%{_javadir}/junit.jar \
+	--enable-javahl \
+	--with-jdk=%{_jvmdir}/java \
+	--with-junit=%{_javadir}/junit.jar \
 %endif
 %if %{with gnome_keyring}
-   --with-gnome-keyring \
+	--with-gnome-keyring \
 %endif
 %if %{with kwallet}
-   --with-kwallet \
+	--with-kwallet \
 %endif
-   --enable-shared \
-   --with-gssapi=%{_prefix} \
-   --with-libmagic=%{_prefix} \
-   --with-serf=%{_prefix} \
-   --with-sqlite=%{_prefix}
+	--enable-shared \
+	--with-gssapi=%{_prefix} \
+	--with-libmagic=%{_prefix} \
+	--with-serf=%{_prefix} \
+	--with-sqlite=%{_prefix}
 
 %if %{with ruby}
 # fix weird broken autopoo
@@ -673,7 +570,7 @@ perl -pi -e "s|^SWIG_RB_SITE_LIB_DIR.*|SWIG_RB_SITE_LIB_DIR=\"%ruby_sitelibdir\"
 %endif
 
 # fix weird broken autopoo
-perl -pi -e "s|^toolsdir.*|toolsdir=%_libexecdir/svn-tools|g" Makefile
+perl -pi -e "s|^toolsdir.*|toolsdir=%{_libexecdir}/svn-tools|g" Makefile
 
 %{make} all
 
@@ -715,7 +612,6 @@ make LC_ALL=C LANG=C LD_LIBRARY_PATH="`pwd`/subversion/bindings/swig/perl/libsvn
 %endif
 
 %install
-
 %makeinstall_std
 
 %if %{with python}
@@ -723,7 +619,6 @@ make LC_ALL=C LANG=C LD_LIBRARY_PATH="`pwd`/subversion/bindings/swig/perl/libsvn
 # Precompile python
 %py_compile %{buildroot}/%{py_platsitedir}/libsvn
 %py_compile %{buildroot}/%{py_sitedir}/svn
-
 %endif
 
 %if %{with perl}
@@ -738,11 +633,11 @@ popd
 %makeinstall_std install-swig-rb
 %endif
 %if %{with java}
-%{makeinstall_std} install-javahl
+%makeinstall_std install-javahl
 
 mkdir -p %{buildroot}%{_javadir}
-%{__mv} %{buildroot}%{_libdir}/svn-javahl/svn-javahl.jar %{buildroot}%{_javadir}/svn-javahl-%{version}.jar
-%{__ln_s} svn-javahl-%{version}.jar %{buildroot}%{_javadir}/svn-javahl.jar
+mv %{buildroot}%{_libdir}/svn-javahl/svn-javahl.jar %{buildroot}%{_javadir}/svn-javahl-%{version}.jar
+ln -s svn-javahl-%{version}.jar %{buildroot}%{_javadir}/svn-javahl.jar
 
 %{_bindir}/chrpath -d %{buildroot}%{_libdir}/libsvnjavahl-1.so
 %endif
@@ -755,13 +650,13 @@ make pure_vendor_install -C subversion/bindings/swig/perl/native DESTDIR=%{build
 install -D -m 644 %{SOURCE2} %{buildroot}%{_sysconfdir}/httpd/modules.d/10_mod_dav_svn.conf
 install -D -m 644 %{SOURCE3} %{buildroot}%{_sysconfdir}/httpd/conf.d/subversion.conf
 
-%{__install} -D -p -m 0644 %{SOURCE9} %{buildroot}%{_tmpfilesdir}/svnserve.conf
+install -D -p -m 0644 %{SOURCE9} %{buildroot}%{_tmpfilesdir}/svnserve.conf
 
 # install the extra module
 %makeinstall_std install-tools
 
 # cleanup
-rm -f %{buildroot}%{_libdir}/*.*a
+#rm -f %{buildroot}%{_libdir}/*.*a
 
 ######################
 ###  client-tools  ###
@@ -860,5 +755,3 @@ mv -f %{buildroot}%_prefix/local/share/man/man3/* %{buildroot}%{_mandir}/man3/
 # cleanup
 find %{buildroot} -name "perllocal.pod" | xargs rm -f
 
-# delete all .la files
-find %{buildroot} -name *.la -delete
