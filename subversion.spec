@@ -31,7 +31,7 @@ Summary:	A Concurrent Versioning System
 Name:		subversion
 Epoch:		2
 Version:	1.8.5
-Release:	2
+Release:	3
 License:	Apache License
 Group:		Development/Tools
 Url:		http://subversion.apache.org/
@@ -561,7 +561,8 @@ export svn_cv_ruby_sitedir_archsuffix=""
 	--with-gssapi=%{_prefix} \
 	--with-libmagic=%{_prefix} \
 	--with-serf=%{_prefix} \
-	--with-sqlite=%{_prefix}
+	--with-sqlite=%{_prefix} \
+	--enable-bdb6
 
 %if %{with ruby}
 # fix weird broken autopoo
