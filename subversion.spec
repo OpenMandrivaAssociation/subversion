@@ -73,7 +73,7 @@ Provides:	%{name}-ra-method = %{EVRD}
 Provides:	%{name}-client-tools = %{EVRD}
 Provides:	svn = %{EVRD}
 # MD because of the sysconfig files moved to this pkg
-Conflicts:	%{_lib}svn1 < 2:1.8.5-2
+Conflicts:	%{libname} < 2:1.8.5-2
 
 %description
 Subversion (SVN) is a concurrent version control system which enables one or
@@ -256,7 +256,7 @@ This package contains the subversion server and configuration files.
 %_preun_service svnserve
 
 %post server
-%tmpfiles_create svnserve
+%tmpfiles_create svnserve.conf
 %_post_service svnserve
 # fix svn entries in /etc/services
 if ! grep -qE '^svn[[:space:]]+3690/(tcp|udp)[[:space:]]+svnserve' %{_sysconfdir}/services; then
