@@ -31,7 +31,7 @@ Summary:	A Concurrent Versioning System
 Name:		subversion
 Epoch:		2
 Version:	1.8.5
-Release:	3
+Release:	4
 License:	Apache License
 Group:		Development/Tools
 Url:		http://subversion.apache.org/
@@ -127,7 +127,7 @@ This package contains the subversion book and design info files.
 Summary:	Subversion libraries
 Group:		System/Libraries
 Obsoletes:	%{_lib}svn0 < 2:1.7.13-4
-Obsoletes:	%{_lib}svn1 < 2:1.8.5-2
+Obsoletes:	%{_lib}svn1 < 2:1.8.5-3
 
 %description -n	%{libname}
 Subversion common libraries.
