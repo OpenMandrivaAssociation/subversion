@@ -30,8 +30,8 @@
 Summary:	A Concurrent Versioning System
 Name:		subversion
 Epoch:		2
-Version:	1.8.5
-Release:	4
+Version:	1.8.9
+Release:	1
 License:	Apache License
 Group:		Development/Tools
 Url:		http://subversion.apache.org/
@@ -66,7 +66,7 @@ BuildRequires:	pkgconfig(serf-1)
 BuildRequires:	swig >= 1.3.27
 # needs this despite with ruby 0
 BuildRequires:	ruby
-BuildRequires:	ruby-devel
+BuildRequires:	pkgconfig(ruby)
 BuildRequires:	ruby-rdoc
 
 Provides:	%{name}-ra-method = %{EVRD}
@@ -366,7 +366,7 @@ subversion libraries using perl.
 %package -n	ruby-svn
 Summary:	Ruby bindings for Subversion
 Group:		Development/Ruby
-BuildRequires:	ruby-devel
+BuildRequires:	pkgconfig(ruby)
 Requires:	ruby
 Provides:	ruby-subversion = %{EVRD}
 
