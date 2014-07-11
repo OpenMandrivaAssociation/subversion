@@ -31,7 +31,7 @@ Summary:	A Concurrent Versioning System
 Name:		subversion
 Epoch:		2
 Version:	1.8.9
-Release:	2
+Release:	3
 License:	Apache License
 Group:		Development/Tools
 Url:		http://subversion.apache.org/
