@@ -30,8 +30,8 @@
 Summary:	A Concurrent Versioning System
 Name:		subversion
 Epoch:		2
-Version:	1.8.9
-Release:	3
+Version:	1.8.10
+Release:	1
 License:	Apache License
 Group:		Development/Tools
 Url:		http://subversion.apache.org/
@@ -511,13 +511,15 @@ chmod 644 BUGS CHANGES COMMITTERS LICENSE INSTALL README
 mv svn-book-html-chunk svnbook-1.8
 
 # This PATH order makes the fugly test for libtoolize work...
-PATH=/usr/bin:$PATH ./autogen.sh --release
+PYTHON=%{__python2} PATH=/usr/bin:$PATH ./autogen.sh --release
 
 # lib64 fixes
 perl -pi -e "s|\\$serf_prefix/lib\b|\\$serf_prefix/%{_lib}|g" build/ac-macros/serf.m4 configure*
 
 %build
 %serverbuild
+
+export PYTHON=%{__python2}
 
 %if %{with java}
 export JAVADIR=%{_jvmdir}/java

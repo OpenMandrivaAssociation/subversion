@@ -1,4 +1,6 @@
+removed_sources:
+  subversion-1.8.9.tar.bz2: 424ee12708f39a126efd905886666083dcc4eeaf
 sources:
+  subversion-1.8.10.tar.bz2: d6896d94bb53c1b4c6e9c5bb1a5c466477b19b2b
   subversion.png: 66240e7f01c405341e0e5b0a95cd383914e8e486
   svn-book-html-chunk.tar.bz2: 3b3b3dbcc08ed129978ee4ed3aa9536858da1cc2
-  subversion-1.8.9.tar.bz2: 424ee12708f39a126efd905886666083dcc4eeaf
