@@ -31,7 +31,7 @@ Summary:	A Concurrent Versioning System
 Name:		subversion
 Epoch:		2
 Version:	1.8.10
-Release:	2
+Release:	3
 License:	Apache License
 Group:		Development/Tools
 Url:		http://subversion.apache.org/
@@ -45,6 +45,7 @@ Source7:	http://svnbook.red-bean.com/nightly/en/svn-book-html-chunk.tar.bz2
 Source8:	svnserve.service
 Source9:	svnserve-tmpfiles.conf
 Patch0:		subversion-1.8.3-underlink.diff
+Patch1:		subversion-1.8.10-apr-1.5.patch
 
 BuildRequires:	chrpath
 BuildRequires:	docbook-style-xsl
