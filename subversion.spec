@@ -16,7 +16,7 @@
 %bcond_without  ruby
 %bcond_without  perl
 %bcond_without  gnome_keyring
-%bcond_without  kwallet
+%bcond_with  kwallet
 %bcond_with test
 %bcond_with debug
 
