@@ -13,7 +13,7 @@
 %define _exclude_files_from_autoreq ^%{_libdir}/libsvnjavahl-%{svnjavahl_api}.so$
 
 %bcond_without  python
-%bcond_without  ruby
+%bcond_with  ruby
 %bcond_without  perl
 %bcond_without  gnome_keyring
 %bcond_with  kwallet
@@ -31,7 +31,7 @@ Summary:	A Concurrent Versioning System
 Name:		subversion
 Epoch:		2
 Version:	1.8.10
-Release:	3
+Release:	4
 License:	Apache License
 Group:		Development/Tools
 Url:		http://subversion.apache.org/
@@ -535,7 +535,7 @@ export svn_cv_ruby_sitedir_libsuffix=""
 export svn_cv_ruby_sitedir_archsuffix=""
 %endif
 
-%configure2_5x \
+%configure \
 	--localstatedir=/var/lib \
 	--with-apr_memcache=%{_prefix} \
 	--with-apxs=%{_bindir}/apxs \
