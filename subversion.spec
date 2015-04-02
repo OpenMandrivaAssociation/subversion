@@ -30,7 +30,7 @@
 Summary:	A Concurrent Versioning System
 Name:		subversion
 Epoch:		2
-Version:	1.8.11
+Version:	1.8.13
 Release:	1
 License:	Apache License
 Group:		Development/Tools
