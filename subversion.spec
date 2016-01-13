@@ -30,8 +30,8 @@
 Summary:	A Concurrent Versioning System
 Name:		subversion
 Epoch:		2
-Version:	1.8.13
-Release:	2
+Version:	1.9.3
+Release:	1
 License:	Apache License
 Group:		Development/Tools
 Url:		http://subversion.apache.org/
@@ -44,8 +44,6 @@ Source6:	%{name}-1.3.0-global-servers
 Source7:	http://svnbook.red-bean.com/nightly/en/svn-book-html-chunk.tar.bz2
 Source8:	svnserve.service
 Source9:	svnserve-tmpfiles.conf
-Patch0:		subversion-1.8.3-underlink.diff
-Patch1:		subversion-1.8.10-apr-1.5.patch
 
 BuildRequires:	chrpath
 BuildRequires:	docbook-style-xsl
@@ -96,7 +94,6 @@ of things you want %{name}-server.
 %config(noreplace) %{_sysconfdir}/subversion/*
 %{_bindir}/svn
 %{_bindir}/svnversion
-%{_bindir}/showchange*
 %{_bindir}/svnlook
 %{_mandir}/man1/svn.*
 %{_mandir}/man1/svnlook.*
@@ -122,7 +119,7 @@ This package contains the subversion book and design info files.
 
 #-------------------------------------------------------------------------
 
-%define svnlibs svn_client svn_delta svn_diff svn_fs svn_fs_base svn_fs_fs svn_fs_util svn_repos svn_subr svn_ra svn_ra_local svn_ra_serf svn_ra_svn svn_wc
+%define svnlibs svn_client svn_delta svn_diff svn_fs svn_fs_base svn_fs_fs svn_fs_util svn_fs_x svn_repos svn_subr svn_ra svn_ra_local svn_ra_serf svn_ra_svn svn_wc
 
 %package -n	%{libname}
 Summary:	Subversion libraries
@@ -160,6 +157,7 @@ EOF
 done)}
 # MD should we remove this?
 %{_libdir}/libsvn_diff.so
+%{_libdir}/pkgconfig/*.pc
 
 %if %{with java}
 %exclude %{_libdir}/libsvnjavahl*
@@ -302,6 +300,8 @@ find it at http://cvs2svn.tigris.org/
 %files tools
 %{_bindir}/hot-backup*
 %{_bindir}/svnadmin
+%{_bindir}/svnbench
+%{_bindir}/svnfsfs
 %{_bindir}/svnsync
 %{_bindir}/svndumpfilter
 %{_bindir}/svnrdump
@@ -311,15 +311,13 @@ find it at http://cvs2svn.tigris.org/
 %{_libexecdir}/svn-tools/diff3
 %{_libexecdir}/svn-tools/diff4
 %{_libexecdir}/svn-tools/fsfs-access-map
-%{_libexecdir}/svn-tools/fsfs-reorg
-%{_libexecdir}/svn-tools/fsfs-stats
 %{_libexecdir}/svn-tools/svnauthz
 %{_libexecdir}/svn-tools/svnauthz-validate
 %{_libexecdir}/svn-tools/svn-bench
 %{_libexecdir}/svn-tools/svnmucc
 %{_libexecdir}/svn-tools/svn-populate-node-origins-index
 %{_libexecdir}/svn-tools/svnraisetreeconflict
-%{_libexecdir}/svn-tools/svn-rep-sharing-stats
+%{_libexecdir}/svn-tools/x509-parser
 %{_datadir}/%{name}-%{version}/repo-tools
 %{_mandir}/man1/svnadmin.1*
 %{_mandir}/man1/svndumpfilter.1*
@@ -575,6 +573,7 @@ perl -pi -e "s|^SWIG_RB_SITE_LIB_DIR.*|SWIG_RB_SITE_LIB_DIR=\"%ruby_sitelibdir\"
 
 # fix weird broken autopoo
 perl -pi -e "s|^toolsdir.*|toolsdir=%{_libexecdir}/svn-tools|g" Makefile
+perl -pi -e "s|^pkgconfig_dir.*|pkgconfig_dir = %{_libdir}/pkgconfig|g" Makefile
 
 %{make} all
 
@@ -678,9 +677,6 @@ install -D -p -m 0644 %{SOURCE9} %{buildroot}%{_tmpfilesdir}/svnserve.conf
 # (cd  %%{buildroot}/%%{_bindir}; ln -sf  svn_load_dirs.pl svn_load_dirs)
 # install -m 755 contrib/client-side/svn-log.pl %%{buildroot}%%{_bindir}
 # (cd  %%{buildroot}/%%{_bindir}; ln -sf  svn-log.pl svn-log)
-
-install -m 755 tools/client-side/showchange.pl %{buildroot}%{_bindir}
-(cd  %{buildroot}/%{_bindir}; ln -sf  showchange.pl showchange)
 
 install -d -m 755 %{buildroot}%{_sysconfdir}/bash_completion.d
 install -m 644 tools/client-side/bash_completion \
