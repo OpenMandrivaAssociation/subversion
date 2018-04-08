@@ -2,6 +2,9 @@
 %define _build_pkgcheck_set %{nil}
 %define _build_pkgcheck_srpm %{nil}
 
+# While svn scripts are python2
+%define _python_bytecompile_build 0
+
 %define apache_version 2.4.0
 %define api 1
 %define major 0
@@ -26,17 +29,24 @@
 %ifarch %arm
 %bcond_with  java
 %endif
+%define beta rc2
 
 Summary:	A Concurrent Versioning System
 Name:		subversion
 Epoch:		2
-Version:	1.9.7
+Version:	1.10.0
+%if "%{beta}" != ""
+Release:	0.%{beta}.1
+Source0:	http://www.apache.org/dist/subversion/%{name}-%{version}-%{beta}.tar.bz2
+Source1:	http://www.apache.org/dist/subversion/%{name}-%{version}-%{beta}.tar.bz2.asc
+%else
 Release:	1
+Source0:	http://www.apache.org/dist/subversion/%{name}-%{version}.tar.bz2
+Source1:	http://www.apache.org/dist/subversion/%{name}-%{version}.tar.bz2.asc
+%endif
 License:	Apache License
 Group:		Development/Tools
 Url:		http://subversion.apache.org/
-Source0:	http://www.apache.org/dist/subversion/%{name}-%{version}.tar.bz2
-Source1:	http://www.apache.org/dist/subversion/%{name}-%{version}.tar.bz2.asc
 Source2:	mod_dav_svn.conf
 Source3:	subversion.conf
 Source5:	%{name}-1.3.0-global-config
@@ -54,6 +64,7 @@ BuildRequires:	db-devel
 BuildRequires:	apache-devel >= %{apache_version}
 BuildRequires:	krb5-devel
 BuildRequires:	magic-devel
+BuildRequires:	utf8proc-devel
 BuildRequires:	pkgconfig(apr-1)
 BuildRequires:	pkgconfig(apr-util-1)
 BuildRequires:	pkgconfig(libexslt)
@@ -95,6 +106,7 @@ of things you want %{name}-server.
 %{_bindir}/svn
 %{_bindir}/svnversion
 %{_bindir}/svnlook
+%{_libexecdir}/svn-tools
 %{_mandir}/man1/svn.*
 %{_mandir}/man1/svnlook.*
 %{_mandir}/man1/svnversion.*
@@ -497,8 +509,11 @@ a subversion server.
 #--------------------------------------------------------------------------
 
 %prep
-%setup -q -a 7
-%apply_patches
+%if "%{beta}" != ""
+%autosetup -a 7 -n %{name}-%{version}-%{beta}
+%else
+%autosetup -a 7
+%endif
 
 # fix shellbang lines, #111498
 perl -pi -e 's|/usr/bin/env perl|%{_bindir}/perl|g' tools/hook-scripts/*.pl.in
