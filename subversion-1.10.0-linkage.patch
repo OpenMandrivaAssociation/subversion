@@ -1,0 +1,13 @@
+diff -up subversion-1.10.0/subversion/bindings/swig/perl/native/Makefile.omv~ subversion-1.10.0/subversion/bindings/swig/perl/native/Makefile
+diff -up subversion-1.10.0/subversion/bindings/swig/perl/native/Makefile.PL.in.omv~ subversion-1.10.0/subversion/bindings/swig/perl/native/Makefile.PL.in
+--- subversion-1.10.0/subversion/bindings/swig/perl/native/Makefile.PL.in.omv~	2018-07-07 02:05:22.389242457 +0200
++++ subversion-1.10.0/subversion/bindings/swig/perl/native/Makefile.PL.in	2018-07-07 02:05:37.232243011 +0200
+@@ -88,7 +88,7 @@ my %config = (
+     OBJECT => q/$(O_FILES)/,
+     LIBS => [join(' ', $apr_ldflags,
+                   (map {"-L$_"} @ldpaths),
+-                  @ldmodules, '-lsvn_swig_perl-1',
++                  @ldmodules, '-lsvn_swig_perl-1 -lapr-1',
+                   `$swig -perl -ldflags`)],
+     LDFLAGS => join(' ', (map {"-L$_"} @ldpaths), '@LDFLAGS@ @SWIG_PL_LINK@'),
+     LDDLFLAGS => join(' ', (map {"-L$_"} @ldpaths),

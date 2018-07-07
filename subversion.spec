@@ -29,7 +29,7 @@
 %ifarch %arm
 %bcond_with  java
 %endif
-%define beta rc2
+%define beta %{nil}
 
 Summary:	A Concurrent Versioning System
 Name:		subversion
@@ -54,6 +54,7 @@ Source6:	%{name}-1.3.0-global-servers
 Source7:	http://svnbook.red-bean.com/nightly/en/svn-book-html-chunk.tar.bz2
 Source8:	svnserve.service
 Source9:	svnserve-tmpfiles.conf
+Patch0:		subversion-1.10.0-linkage.patch
 
 BuildRequires:	chrpath
 BuildRequires:	docbook-style-xsl
@@ -510,9 +511,9 @@ a subversion server.
 
 %prep
 %if "%{beta}" != ""
-%autosetup -a 7 -n %{name}-%{version}-%{beta}
+%autosetup -p1 -a 7 -n %{name}-%{version}-%{beta}
 %else
-%autosetup -a 7
+%autosetup -p1 -a 7
 %endif
 
 # fix shellbang lines, #111498
