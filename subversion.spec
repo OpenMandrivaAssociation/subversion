@@ -73,6 +73,7 @@ BuildRequires:	pkgconfig(neon)
 BuildRequires:	pkgconfig(python)
 BuildRequires:	pkgconfig(sqlite3)
 BuildRequires:	pkgconfig(serf-1)
+BuildRequires:	pkgconfig(libsecret-1)
 # Swig is runtime only
 BuildRequires:	swig >= 1.3.27
 # needs this despite with ruby 0
