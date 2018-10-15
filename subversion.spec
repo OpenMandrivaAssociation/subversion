@@ -34,7 +34,7 @@
 Summary:	A Concurrent Versioning System
 Name:		subversion
 Epoch:		2
-Version:	1.10.2
+Version:	1.10.3
 %if "%{beta}" != ""
 Release:	0.%{beta}.1
 Source0:	http://www.apache.org/dist/subversion/%{name}-%{version}-%{beta}.tar.bz2
@@ -70,7 +70,7 @@ BuildRequires:	pkgconfig(apr-1)
 BuildRequires:	pkgconfig(apr-util-1)
 BuildRequires:	pkgconfig(libexslt)
 BuildRequires:	pkgconfig(neon)
-BuildRequires:	pkgconfig(python)
+BuildRequires:	pkgconfig(python2)
 BuildRequires:	pkgconfig(sqlite3)
 BuildRequires:	pkgconfig(serf-1)
 BuildRequires:	pkgconfig(libsecret-1)
@@ -550,7 +550,8 @@ export svn_cv_ruby_sitedir_libsuffix=""
 export svn_cv_ruby_sitedir_archsuffix=""
 %endif
 
-%configure \
+%configure CFLAGS="$CFLAGS -I /usr/lib64/perl5/CORE" \
+	LDFLAGS="-lm" \
 	--localstatedir=/var/lib \
 	--with-apr_memcache=%{_prefix} \
 	--with-apxs=%{_bindir}/apxs \
@@ -560,6 +561,7 @@ export svn_cv_ruby_sitedir_archsuffix=""
 	--disable-mod-activation \
 	--with-swig=%{_prefix} \
 	--disable-static \
+	--with-lz4=internal \
 %if %{with debug}
 	--enable-maintainer-mode \
 	--enable-debug \
