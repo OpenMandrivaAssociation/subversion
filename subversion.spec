@@ -456,6 +456,7 @@ library functions from Java.
 Summary:	Perl bindings for Subversion
 Group:		Development/Perl
 BuildRequires:	perl-devel
+Buildrequires:	perl-ExtUtils-Embed
 Requires:	%{name} = %{EVRD}
 Provides:	perl-svn = %{EVRD}
 
@@ -550,8 +551,7 @@ export svn_cv_ruby_sitedir_libsuffix=""
 export svn_cv_ruby_sitedir_archsuffix=""
 %endif
 
-%configure CFLAGS="$CFLAGS -I /usr/lib64/perl5/CORE" \
-	LDFLAGS="-lm" \
+%configure \
 	--localstatedir=/var/lib \
 	--with-apr_memcache=%{_prefix} \
 	--with-apxs=%{_bindir}/apxs \
