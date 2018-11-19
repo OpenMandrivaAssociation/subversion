@@ -23,10 +23,10 @@
 %bcond_with test
 %bcond_with debug
 
-%ifarch %{ix86} x86_64
+%ifarch %{ix86} %{x86_64}
 %bcond_without  java
 %endif
-%ifarch %arm
+%ifarch %{armx}
 %bcond_with  java
 %endif
 %define beta %{nil}
@@ -40,7 +40,7 @@ Release:	0.%{beta}.1
 Source0:	http://www.apache.org/dist/subversion/%{name}-%{version}-%{beta}.tar.bz2
 Source1:	http://www.apache.org/dist/subversion/%{name}-%{version}-%{beta}.tar.bz2.asc
 %else
-Release:	1
+Release:	2
 Source0:	http://www.apache.org/dist/subversion/%{name}-%{version}.tar.bz2
 Source1:	http://www.apache.org/dist/subversion/%{name}-%{version}.tar.bz2.asc
 %endif
@@ -133,7 +133,10 @@ This package contains the subversion book and design info files.
 
 #-------------------------------------------------------------------------
 
-%define svnlibs svn_client svn_delta svn_diff svn_fs svn_fs_base svn_fs_fs svn_fs_util svn_fs_x svn_repos svn_subr svn_ra svn_ra_local svn_ra_serf svn_ra_svn svn_wc
+%define svnlibs svn_client svn_delta svn_diff svn_fs  svn_fs_fs svn_fs_util svn_fs_x svn_repos svn_subr svn_ra svn_ra_local svn_ra_serf svn_ra_svn svn_wc
+%if %{with java}
+%define svnlibs %svnlibs svn_fs_base
+%endif
 
 %package -n	%{libname}
 Summary:	Subversion libraries
