@@ -133,10 +133,12 @@ This package contains the subversion book and design info files.
 
 #-------------------------------------------------------------------------
 
-%define svnlibs svn_client svn_delta svn_diff svn_fs  svn_fs_fs svn_fs_util svn_fs_x svn_repos svn_subr svn_ra svn_ra_local svn_ra_serf svn_ra_svn svn_wc
+%define svnlibs_default svn_client svn_delta svn_diff svn_fs  svn_fs_fs svn_fs_util svn_fs_x svn_repos svn_subr svn_ra svn_ra_local svn_ra_serf svn_ra_svn svn_wc
 %if %{with java}
-%define svnlibs %svnlibs svn_fs_base
+%define svnlibs_extra %svnlibs svn_fs_base
 %endif
+
+%define svnlibs %{svnlibs_default} %{svnlibs_extra}
 
 %package -n	%{libname}
 Summary:	Subversion libraries
