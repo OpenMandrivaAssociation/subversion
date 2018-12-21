@@ -589,6 +589,9 @@ export svn_cv_ruby_sitedir_archsuffix=""
 	--with-sqlite=%{_prefix} \
 	--enable-bdb6
 
+# Debugging why bdb isn't found inside abf
+cat config.log
+
 %if %{with ruby}
 # fix weird broken autopoo
 perl -pi -e "s|^SWIG_RB_SITE_ARCH_DIR.*|SWIG_RB_SITE_ARCH_DIR=\"%ruby_sitearchdir\"|g" Makefile
