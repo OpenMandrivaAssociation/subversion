@@ -23,12 +23,7 @@
 %bcond_with test
 %bcond_with debug
 
-%ifarch %{ix86} %{x86_64}
 %bcond_without  java
-%endif
-%ifarch %{armx}
-%bcond_with  java
-%endif
 %define beta %{nil}
 
 Summary:	A Concurrent Versioning System
@@ -136,6 +131,8 @@ This package contains the subversion book and design info files.
 %define svnlibs_default svn_client svn_delta svn_diff svn_fs  svn_fs_fs svn_fs_util svn_fs_x svn_repos svn_subr svn_ra svn_ra_local svn_ra_serf svn_ra_svn svn_wc
 %if %{with java}
 %define svnlibs_extra svn_fs_base
+%else
+%define svnlibs_extra %{nil}
 %endif
 
 %define svnlibs %{svnlibs_default} %{svnlibs_extra}
@@ -588,9 +585,6 @@ export svn_cv_ruby_sitedir_archsuffix=""
 	--with-serf=%{_prefix} \
 	--with-sqlite=%{_prefix} \
 	--enable-bdb6
-
-# Debugging why bdb isn't found inside abf
-cat config.log
 
 %if %{with ruby}
 # fix weird broken autopoo
