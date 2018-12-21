@@ -61,7 +61,7 @@ BuildRequires:	docbook-style-xsl
 BuildRequires:	doxygen
 BuildRequires:	libtool
 BuildRequires:	texinfo
-BuildRequires:	db-devel
+BuildRequires:	db62-devel
 BuildRequires:	apache-devel >= %{apache_version}
 BuildRequires:	krb5-devel
 BuildRequires:	magic-devel
