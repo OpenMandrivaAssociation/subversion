@@ -534,6 +534,10 @@ PYTHON=%{__python2} PATH=/usr/bin:$PATH ./autogen.sh --release
 perl -pi -e "s|\\$serf_prefix/lib\b|\\$serf_prefix/%{_lib}|g" build/ac-macros/serf.m4 configure*
 
 %build
+%ifarch aarch64
+%define _disable_lto 1
+%endif
+
 %serverbuild
 
 export PYTHON=%{__python2}
@@ -552,7 +556,6 @@ export svn_cv_ruby_sitedir_archsuffix=""
 %endif
 
 %ifarch aarch64
-%define _disable_lto 1
 export CC=gcc
 export CXX=g++
 %endif
