@@ -552,6 +552,7 @@ export svn_cv_ruby_sitedir_archsuffix=""
 %endif
 
 %ifarch aarch64
+%define _disable_lto 1
 export CC=gcc
 export CXX=g++
 %endif
