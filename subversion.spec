@@ -55,6 +55,7 @@ Source8:	svnserve.service
 Source9:	svnserve-tmpfiles.conf
 Patch0:		subversion-1.10.0-linkage.patch
 
+BuildRequires:	boost-devel
 BuildRequires:	chrpath
 BuildRequires:	docbook-style-xsl
 BuildRequires:	doxygen
