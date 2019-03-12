@@ -29,12 +29,11 @@
 %bcond_with java
 %endif
 
-%define beta %{nil}
+%define beta rc1
 
 Summary:	A Concurrent Versioning System
 Name:		subversion
-Epoch:		2
-Version:	1.11.1
+Version:	1.12.0
 %if "%{beta}" != ""
 Release:	0.%{beta}.1
 Source0:	http://www.apache.org/dist/subversion/%{name}-%{version}-%{beta}.tar.bz2
@@ -61,7 +60,7 @@ BuildRequires:	docbook-style-xsl
 BuildRequires:	doxygen
 BuildRequires:	libtool
 BuildRequires:	texinfo
-BuildRequires:	db62-devel
+BuildRequires:	db-devel >= 18.1
 BuildRequires:	apache-devel >= %{apache_version}
 BuildRequires:	krb5-devel
 BuildRequires:	magic-devel
@@ -577,7 +576,7 @@ export CXX=g++
 %endif
 %if %{with java}
 	--enable-javahl \
-	--with-jdk=%{_jvmdir}/java \
+	--with-jdk=%{_prefix}/lib/jvm/java-11-openjdk \
 	--with-junit=%{_javadir}/junit.jar \
 %endif
 %if %{with gnome_keyring}
