@@ -29,7 +29,7 @@
 %bcond_with java
 %endif
 
-%define beta rc1
+%define beta %{nil}
 
 Summary:	A Concurrent Versioning System
 Name:		subversion
