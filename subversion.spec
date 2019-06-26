@@ -23,12 +23,7 @@
 %bcond_with test
 %bcond_with debug
 
-%ifarch %{ix86} %{x86_64}
-%bcond_without  java
-%else
 %bcond_with java
-%endif
-
 %define beta %{nil}
 
 Summary:	A Concurrent Versioning System
