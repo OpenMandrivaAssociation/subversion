@@ -34,7 +34,7 @@ Release:	0.%{beta}.1
 Source0:	http://www.apache.org/dist/subversion/%{name}-%{version}-%{beta}.tar.bz2
 Source1:	http://www.apache.org/dist/subversion/%{name}-%{version}-%{beta}.tar.bz2.asc
 %else
-Release:	1
+Release:	2
 Source0:	http://www.apache.org/dist/subversion/%{name}-%{version}.tar.bz2
 Source1:	http://www.apache.org/dist/subversion/%{name}-%{version}.tar.bz2.asc
 %endif
@@ -133,8 +133,6 @@ This package contains the subversion book and design info files.
 %package -n	%{libname}
 Summary:	Subversion libraries
 Group:		System/Libraries
-Obsoletes:	%{_lib}svn0 < 2:1.7.13-4
-Obsoletes:	%{_lib}svn1 < 2:1.8.5-3
 
 %description -n	%{libname}
 Subversion common libraries.
