@@ -28,7 +28,7 @@
 
 Summary:	A Concurrent Versioning System
 Name:		subversion
-Version:	1.12.0
+Version:	1.12.2
 %if "%{beta}" != ""
 Release:	0.%{beta}.1
 Source0:	http://www.apache.org/dist/subversion/%{name}-%{version}-%{beta}.tar.bz2
