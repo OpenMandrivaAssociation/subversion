@@ -28,13 +28,13 @@
 
 Summary:	A Concurrent Versioning System
 Name:		subversion
-Version:	1.13.0
+Version:	1.14.0
 %if "%{beta}" != ""
-Release:	2
+Release:	1
 Source0:	http://www.apache.org/dist/subversion/%{name}-%{version}-%{beta}.tar.bz2
 Source1:	http://www.apache.org/dist/subversion/%{name}-%{version}-%{beta}.tar.bz2.asc
 %else
-Release:	2
+Release:	1
 Source0:	http://www.apache.org/dist/subversion/%{name}-%{version}.tar.bz2
 Source1:	http://www.apache.org/dist/subversion/%{name}-%{version}.tar.bz2.asc
 %endif
@@ -65,7 +65,7 @@ BuildRequires:	pkgconfig(apr-1)
 BuildRequires:	pkgconfig(apr-util-1)
 BuildRequires:	pkgconfig(libexslt)
 BuildRequires:	pkgconfig(neon)
-BuildRequires:	pkgconfig(python2)
+BuildRequires:	pkgconfig(python3)
 BuildRequires:	pkgconfig(sqlite3)
 BuildRequires:	pkgconfig(serf-1)
 BuildRequires:	pkgconfig(libsecret-1)
@@ -74,7 +74,8 @@ BuildRequires:	swig >= 1.3.27
 # needs this despite with ruby 0
 BuildRequires:	ruby
 BuildRequires:	pkgconfig(ruby)
-BuildRequires:	ruby-rdoc
+BuildRequires:	ruby-doc
+BuildRequires:	py3c
 
 Provides:	%{name}-ra-method = %{EVRD}
 Provides:	%{name}-client-tools = %{EVRD}
@@ -460,7 +461,8 @@ library functions within perl scripts.
 %{_libdir}/libsvn_swig_perl-%{api}.so.%{major}*
 %{perl_vendorarch}/SVN
 %{perl_vendorarch}/auto/SVN
-%{perl_sitearch}/*
+%{perl_vendorlib}/SVN
+%{perl_vendorlib}/auto/SVN
 %{_mandir}/man3/SVN::*.3*
 
 %package -n	perl-svn-devel
@@ -519,7 +521,7 @@ chmod 644 BUGS CHANGES COMMITTERS LICENSE INSTALL README
 mv svn-book-html-chunk svnbook-1.8
 
 # This PATH order makes the fugly test for libtoolize work...
-PYTHON=%{__python2} PATH=/usr/bin:$PATH ./autogen.sh --release
+PATH=/usr/bin:$PATH ./autogen.sh --release
 
 # lib64 fixes
 perl -pi -e "s|\\$serf_prefix/lib\b|\\$serf_prefix/%{_lib}|g" build/ac-macros/serf.m4 configure*
@@ -530,8 +532,6 @@ perl -pi -e "s|\\$serf_prefix/lib\b|\\$serf_prefix/%{_lib}|g" build/ac-macros/se
 %endif
 
 %serverbuild
-
-export PYTHON=%{__python2}
 
 %if %{with java}
 export JAVADIR=%{_jvmdir}/java
@@ -603,7 +603,7 @@ make swig-py swig_pydir=%{py_platsitedir}/libsvn swig_pydir_extra=%{py_sitedir}/
 %if %{with perl}
 make swig-pl
 pushd  subversion/bindings/swig/perl/native
-        perl Makefile.PL
+        perl Makefile.PL SITEARCHEXP=%{_datadir}/perl5/vendor_perl INSTALLSITEARCH=%{_datadir}/perl5/vendor_perl
 popd
 %endif
 
@@ -646,7 +646,7 @@ make LC_ALL=C LANG=C LD_LIBRARY_PATH="`pwd`/subversion/bindings/swig/perl/libsvn
 %if %{with perl}
 %makeinstall_std install-swig-pl-lib
 pushd subversion/bindings/swig/perl/native/
-        perl Makefile.PL
+        perl Makefile.PL SITEARCHEXP=%{_datadir}/perl5/vendor_perl INSTALLSITEARCH=%{_datadir}/perl5/vendor_perl
         %makeinstall_std
 popd
 %endif
