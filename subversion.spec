@@ -181,7 +181,6 @@ Group:		System/Libraries
 BuildRequires:	pkgconfig(dbus-1) >= 1.2.4.4permissive
 BuildRequires:	pkgconfig(gnome-keyring-1)
 Requires:	gnome-keyring >= 2.26.1
-Obsoletes:	%{_lib}svn-gnome-keyring0 < 2:1.8.5-2
 
 %description -n	%{libgnomekeyring}
 Subversion library that allow interaction with the gnome-keyring daemon.
@@ -194,8 +193,6 @@ Summary:	Subversion headers/libraries for development
 Group:		Development/GNOME and GTK+
 Requires:	%{name}-devel = %{EVRD}
 Requires:	%{libgnomekeyring} = %{EVRD}
-Conflicts:	%{name}-devel < 2:1.6.17-2
-Obsoletes:	%{name}-gnome-keyring-devel < 2:1.8.5-2
 
 %description -n %{devgnomekeyring}
 This package contains the header files and linker scripts for the
@@ -217,7 +214,6 @@ Group:		System/Libraries
 BuildRequires:	kdelibs4-devel
 BuildRequires:	pkgconfig(dbus-1)
 Requires:	kwallet
-Obsoletes:	%{_lib}svn-kwallet0 < 2:1.8.5-2
 
 %description -n	%{libkwallet}
 Subversion library that allow interaction with the kwallet daemon.
@@ -230,8 +226,6 @@ Summary:	Subversion headers/libraries for development
 Group:		Development/KDE and Qt
 Requires:	%{name}-devel = %{EVRD}
 Requires:	%{libkwallet} = %{EVRD}
-Conflicts:	%{name}-devel < 2:1.6.17-2
-Obsoletes:	%{name}-kwallet-devel < 2:1.8.5-2
 
 %description -n	%{devkwallet}
 This package contains the header files and linker scripts for the
@@ -354,8 +348,6 @@ Summary:	Subversion headers/libraries for development
 Group:		Development/Python
 Requires:	%{name}-devel = %{EVRD}
 Requires:	python-svn = %{EVRD}
-Obsoletes:	python-svn-devel < 2:1.5.2-2
-Conflicts:	%{name}-devel < 2:1.6.17-2
 
 %description -n	python-svn-devel
 This package contains the header files and linker scripts for
@@ -388,8 +380,6 @@ library functions within ruby scripts.
 Summary:	Subversion headers/libraries for development
 Group:		Development/Ruby
 Requires:	ruby-svn = %{EVRD}
-Obsoletes:	ruby-svn-devel < 2:1.5.2-2
-Conflicts:	%{name}-devel < 2:1.6.17-2
 
 %description -n	ruby-svn-devel
 This package contains the header files and linker scripts for
@@ -470,9 +460,7 @@ Summary:	Subversion headers/libraries for development
 Group:		Development/Perl
 Requires:	%{name}-devel = %{EVRD}
 Requires:	perl-SVN = %{EVRD}
-Obsoletes:	perl-SVN-devel < 2:1.5.2-2
 Provides:	perl-SVN-devel = %{EVRD}
-Conflicts:	%{name}-devel < 2:1.6.17-2
 
 %description -n	perl-svn-devel
 This package contains the header files and linker scripts for
