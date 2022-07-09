@@ -1,0 +1,2 @@
+g svn - -
+u svn - "Subversion server" /var/lib/svn /usr/sbin/nologin

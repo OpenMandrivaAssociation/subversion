@@ -48,6 +48,7 @@ Source6:	%{name}-1.3.0-global-servers
 Source7:	http://svnbook.red-bean.com/nightly/en/svn-book-html-chunk.tar.bz2
 Source8:	svnserve.service
 Source9:	svnserve-tmpfiles.conf
+Source10:	subversion.sysusers
 Patch0:		subversion-1.10.0-linkage.patch
 
 BuildRequires:	boost-devel
@@ -248,15 +249,8 @@ Requires(post):	systemd
 %description server
 This package contains the subversion server and configuration files. 
 
-%pre server
-%_pre_useradd svn /var/lib/svn /bin/false
-
-%preun server
-%_preun_service svnserve
-
 %post server
 %tmpfiles_create svnserve.conf
-%_post_service svnserve
 # fix svn entries in /etc/services
 if ! grep -qE '^svn[[:space:]]+3690/(tcp|udp)[[:space:]]+svnserve' %{_sysconfdir}/services; then
         # cleanup
@@ -266,9 +260,6 @@ if ! grep -qE '^svn[[:space:]]+3690/(tcp|udp)[[:space:]]+svnserve' %{_sysconfdir
         echo -e "svn\t3690/udp\tsvnserve\t# Subversion svnserve" >> /etc/services
 fi
 
-%postun server
-%_postun_userdel svn
-
 %files server
 %doc BUGS CHANGES COMMITTERS LICENSE INSTALL README
 %{_bindir}/svnserve
@@ -277,6 +268,7 @@ fi
 %{_mandir}/man8/svnserve.8*
 %{_mandir}/man5/svnserve.conf.5*
 %{_tmpfilesdir}/svnserve.conf
+%{_sysusersdir}/%{name}.conf
 
 #--------------------------------------------------------------------------
 
@@ -659,6 +651,8 @@ make pure_vendor_install -C subversion/bindings/swig/perl/native DESTDIR=%{build
 
 install -D -m 644 %{SOURCE2} %{buildroot}%{_sysconfdir}/httpd/modules.d/10_mod_dav_svn.conf
 install -D -m 644 %{SOURCE3} %{buildroot}%{_sysconfdir}/httpd/conf.d/subversion.conf
+mkdir -p %{buildroot}%{_sysusersdir}
+install -c -m 644 %{S:10} %{buildroot}%{_sysusersdir}/%{name}.conf
 
 install -D -p -m 0644 %{SOURCE9} %{buildroot}%{_tmpfilesdir}/svnserve.conf
 
