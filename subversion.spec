@@ -1,3 +1,5 @@
+%define _disable_rebuild_configure 1
+
 # disable the stupid rpmlint shit from hell!!!
 %define _build_pkgcheck_set %{nil}
 %define _build_pkgcheck_srpm %{nil}
@@ -50,6 +52,8 @@ Source8:	svnserve.service
 Source9:	svnserve-tmpfiles.conf
 Source10:	subversion.sysusers
 Patch0:		subversion-1.10.0-linkage.patch
+Patch1:		https://github.com/apache/subversion/commit/8ff4cfd06ce554e9df31a088c9d09f45278c6de4.patch
+Patch2:		https://github.com/apache/subversion/commit/36e916ddaec4a5b1e64adee34337582f152805c5.patch
 
 BuildRequires:	boost-devel
 BuildRequires:	chrpath
@@ -507,10 +511,6 @@ PATH=/usr/bin:$PATH ./autogen.sh --release
 perl -pi -e "s|\\$serf_prefix/lib\b|\\$serf_prefix/%{_lib}|g" build/ac-macros/serf.m4 configure*
 
 %build
-%ifarch aarch64
-%define _disable_lto 1
-%endif
-
 %serverbuild
 
 %if %{with java}
@@ -518,6 +518,7 @@ export JAVADIR=%{_jvmdir}/java
 %endif
 
 %define _disable_ld_no_undefined 1
+%define _disable_lto 1
 
 %if %{with ruby}
 # override weird -shrext from ruby
@@ -526,10 +527,9 @@ export svn_cv_ruby_sitedir_libsuffix=""
 export svn_cv_ruby_sitedir_archsuffix=""
 %endif
 
-%ifarch aarch64
+# FIXME using clang triggers a freeze during "make install"
 export CC=gcc
 export CXX=g++
-%endif
 
 %configure \
 	--localstatedir=/var/lib \
@@ -576,7 +576,15 @@ perl -pi -e "s|^pkgconfig_dir.*|pkgconfig_dir = %{_libdir}/pkgconfig|g" Makefile
 
 %{make} all
 
+%if %{with python} || %{with perl} || %{with ruby}
+make clean-swig
+%endif
+
 %if %{with python}
+make swig-py swig_pydir=%{py_platsitedir}/libsvn swig_pydir_extra=%{py_sitedir}/svn || :
+# svn generates invalid code with swig 4.1.1, so fix it...
+sed -i -e 's,SWIG_InstallConstants,SWIG_Python_InstallConstants,g' subversion/bindings/swig/python/*.c
+# and then build for real
 make swig-py swig_pydir=%{py_platsitedir}/libsvn swig_pydir_extra=%{py_sitedir}/svn
 %endif
 
