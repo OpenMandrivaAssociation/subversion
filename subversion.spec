@@ -54,6 +54,7 @@ Source10:	subversion.sysusers
 Patch0:		subversion-1.10.0-linkage.patch
 Patch1:		https://github.com/apache/subversion/commit/8ff4cfd06ce554e9df31a088c9d09f45278c6de4.patch
 Patch2:		https://github.com/apache/subversion/commit/36e916ddaec4a5b1e64adee34337582f152805c5.patch
+Patch3:		subversion-1.14.2-db18.patch
 
 BuildRequires:	boost-devel
 BuildRequires:	chrpath

@@ -1,0 +1,16 @@
+diff -up subversion-1.14.2/configure.ac.omv~ subversion-1.14.2/configure.ac
+--- subversion-1.14.2/configure.ac.omv~	2023-10-22 21:46:16.122785545 +0200
++++ subversion-1.14.2/configure.ac	2023-10-22 21:46:34.719990101 +0200
+@@ -452,9 +452,9 @@ powerpc-apple-darwin*)
+     SVN_FS_WANT_DB_PATCH=25
+     ;;
+ *)
+-    SVN_FS_WANT_DB_MAJOR=4
+-    SVN_FS_WANT_DB_MINOR=0
+-    SVN_FS_WANT_DB_PATCH=14
++    SVN_FS_WANT_DB_MAJOR=18
++    SVN_FS_WANT_DB_MINOR=1
++    SVN_FS_WANT_DB_PATCH=40
+     ;;
+ esac
+ db_alt_version="5.x"
