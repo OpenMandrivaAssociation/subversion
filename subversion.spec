@@ -42,7 +42,7 @@ Source1:	http://www.apache.org/dist/subversion/%{name}-%{version}.tar.bz2.asc
 %endif
 License:	Apache License
 Group:		Development/Tools
-Url:		http://subversion.apache.org/
+Url:		https://subversion.apache.org/
 Source2:	mod_dav_svn.conf
 Source3:	subversion.conf
 Source5:	%{name}-1.3.0-global-config
