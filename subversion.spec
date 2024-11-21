@@ -53,6 +53,7 @@ Source9:	svnserve-tmpfiles.conf
 Source10:	subversion.sysusers
 
 BuildRequires:	boost-devel
+BuildRequires:	gettext
 BuildRequires:	chrpath
 BuildRequires:	docbook-style-xsl
 BuildRequires:	doxygen
