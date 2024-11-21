@@ -1,0 +1,252 @@
+From ba3f151bb627cbd86fce6a887b34d6a67ebaf8a4 Mon Sep 17 00:00:00 2001
+From: Yasuhito Futatsuki <futatuki@apache.org>
+Date: Mon, 11 Jan 2021 23:32:57 +0000
+Subject: [PATCH] swig-py: Allow str(unicode) input for argments of still more
+ string types.
+
+[in subversion/bindings/swig]
+
+* include/svn_string.swg
+  (typemap(in) svn_stringbuf_t *):
+    - Allow None as input to pass NULL pointer.
+    - Allow str input on Python 3 and unicode input on Python 2.
+  (typemap(in) const svn_string_t *):
+    Allow str input on Python 3 and unicode input on Python 2.
+
+* include/svn_types.swg
+  (typemap(in) (const char *PTR, apr_size_t LEN):
+    Allow str input on Python 3 and unicode input on Python 2.
+
+* python/tests/client.py
+  (SubversionClientTestCase.test_propset_local):
+    New test case, testing typemap(in) const svn_string_t *.
+
+* python/tests/core.py
+  (SubversionCoreTestCase.test_stream_from_stringbuf):
+    - Turn check of str(unicode) input to acceptance without TypeError.
+    - Add check to accept None as input.
+  (SubversionCoreTestCase.test_stream_from_stringbuf_unicode):
+    New test case, testing typemap(in) svn_stringbuf_t * with unicode input.
+
+
+git-svn-id: https://svn.apache.org/repos/asf/subversion/trunk@1885370 13f79535-47bb-0310-9956-ffa450edef68
+---
+ .../bindings/swig/include/svn_string.swg      | 59 +++++++++++++------
+ .../bindings/swig/include/svn_types.swg       | 16 +++--
+ .../bindings/swig/python/tests/client.py      | 53 +++++++++++++++++
+ subversion/bindings/swig/python/tests/core.py | 21 ++++++-
+ 4 files changed, 124 insertions(+), 25 deletions(-)
+
+diff --git a/subversion/bindings/swig/include/svn_string.swg b/subversion/bindings/swig/include/svn_string.swg
+index 8be4c3d74674f..c0f3f19cb8ad1 100644
+--- a/subversion/bindings/swig/include/svn_string.swg
++++ b/subversion/bindings/swig/include/svn_string.swg
+@@ -74,19 +74,32 @@ typedef struct svn_string_t svn_string_t;
+ 
+ #ifdef SWIGPYTHON
+ %typemap(in) svn_stringbuf_t * {
+-    if (!PyBytes_Check($input)) {
+-        PyErr_SetString(PyExc_TypeError, "not a bytes object");
+-        SWIG_fail;
++    if ($input == Py_None) {
++        $1 = NULL;
+     }
+-    {
+-      Py_ssize_t strBufLen;
+-      char *strBufChar;
+-      if (-1 == PyBytes_AsStringAndSize($input, &strBufChar, &strBufLen)) {
+-        SWIG_fail;
+-      }
+-      $1 = svn_stringbuf_ncreate(strBufChar, strBufLen,
+-                                 /* ### gah... what pool to use? */
+-                                 _global_pool);
++    else {
++        Py_ssize_t strBufLen;
++        char *strBufChar;
++        if (PyBytes_Check($input)) {
++            if (-1 == PyBytes_AsStringAndSize($input, &strBufChar,
++                                              &strBufLen)) {
++                SWIG_fail;
++            }
++        }
++        else if (PyUnicode_Check($input)) {
++            strBufChar = (char *)PyStr_AsUTF8AndSize($input, &strBufLen);
++            if (PyErr_Occurred()) {
++                SWIG_fail;
++            }
++        }
++        else {
++            PyErr_SetString(PyExc_TypeError,
++                            "not a bytes, str or None object");
++            SWIG_fail;
++        }
++        $1 = svn_stringbuf_ncreate((const char *)strBufChar, strBufLen,
++                                   /* ### gah... what pool to use? */
++                                   _global_pool);
+     }
+ }
+ #endif
+@@ -176,16 +189,26 @@ typedef struct svn_string_t svn_string_t;
+ /* const svn_string_t * is always an input parameter */
+ #ifdef SWIGPYTHON
+ %typemap(in) const svn_string_t * (svn_string_t value) {
+-    if ($input == Py_None)
++    if ($input == Py_None) {
+         $1 = NULL;
++    }
+     else {
+         Py_ssize_t pyStrLen;
+-        if (!PyBytes_Check($input)) {
+-            PyErr_SetString(PyExc_TypeError, "not a bytes object");
+-            SWIG_fail;
++        if (PyBytes_Check($input)) {
++            if (PyBytes_AsStringAndSize($input, (char **)&(value.data),
++                                        &pyStrLen) == -1) {
++                SWIG_fail;
++            }
++        }
++        else if (PyUnicode_Check($input)) {
++            value.data = PyStr_AsUTF8AndSize($input, &pyStrLen);
++            if ((value.data == NULL) || PyErr_Occurred()) {
++                SWIG_fail;
++            }
+         }
+-        if (PyBytes_AsStringAndSize($input, (char **)&(value.data),
+-                                    &pyStrLen) == -1) {
++        else {
++            PyErr_SetString(PyExc_TypeError,
++                            "not a bytes, str, or None object");
+             SWIG_fail;
+         }
+         value.len = pyStrLen;
+diff --git a/subversion/bindings/swig/include/svn_types.swg b/subversion/bindings/swig/include/svn_types.swg
+index db0dd7623b678..c0097f056af5b 100644
+--- a/subversion/bindings/swig/include/svn_types.swg
++++ b/subversion/bindings/swig/include/svn_types.swg
+@@ -529,11 +529,19 @@ svn_ ## TYPE ## _swig_rb_closed(VALUE self)
+ #ifdef SWIGPYTHON
+ %typemap(in) (const char *PTR, apr_size_t LEN) {
+     Py_ssize_t pyStrLen;
+-    if (!PyBytes_Check($input)) {
+-        PyErr_SetString(PyExc_TypeError, "expecting a bytes");
+-        SWIG_fail;
++    if (PyBytes_Check($input)) {
++        if (PyBytes_AsStringAndSize($input, (char **)&$1, &pyStrLen) == -1) {
++            SWIG_fail;
++        }
+     }
+-    if (PyBytes_AsStringAndSize($input, &$1, &pyStrLen) == -1) {
++    else if (PyUnicode_Check($input)) {
++        $1 = (char *)PyStr_AsUTF8AndSize($input, &pyStrLen);
++        if (PyErr_Occurred()) {
++            SWIG_fail;
++        }
++    }
++    else {
++        PyErr_SetString(PyExc_TypeError, "expecting a bytes or str");
+         SWIG_fail;
+     }
+     $2 = pyStrLen;
+diff --git a/subversion/bindings/swig/python/tests/client.py b/subversion/bindings/swig/python/tests/client.py
+index 53bf414516329..289819a1917ff 100644
+--- a/subversion/bindings/swig/python/tests/client.py
++++ b/subversion/bindings/swig/python/tests/client.py
+@@ -517,6 +517,59 @@ def test_inherited_props(self):
+                      self.proplist_receiver_dir1, self.client_ctx)
+     self.assertEqual(self.proplist_receiver_dir1_calls, 1)
+ 
++  def test_propset_local(self):
++    """Test svn_client_propset_local.
++(also, testing const svn_string_t * input)"""
++
++    head = core.svn_opt_revision_t()
++    head.kind = core.svn_opt_revision_head
++    unspecified = core.svn_opt_revision_t()
++    unspecified.kind = core.svn_opt_revision_working
++
++    path = self.temper.alloc_empty_dir('-propset_local')
++
++    target_path = os.path.join(path, b'trunk', b'README.txt') 
++    target_prop = b'local_prop_test'
++    prop_val1 = b'foo'
++
++    co_rev = client.checkout3(self.repos_uri, path, head, head, 
++                              core.svn_depth_infinity, True, True,
++                              self.client_ctx)
++
++    client.propset_local(target_prop, prop_val1, [target_path],
++                         core.svn_depth_empty, False, None, self.client_ctx)
++    props, iprops, prop_rev = client.propget5(target_prop, target_path,
++                                              unspecified, unspecified,
++                                              core.svn_depth_empty,
++                                              None, self.client_ctx)
++    self.assertFalse(iprops)
++    self.assertEqual(prop_rev, co_rev)
++    self.assertEqual(props, { target_path : prop_val1 })
++
++    # Using str(unicode) to specify property value.
++    prop_val2 = b'bar'
++    client.propset_local(target_prop, prop_val2.decode('utf-8'), [target_path],
++                         core.svn_depth_empty, False, None, self.client_ctx)
++    props, iprops, prop_rev = client.propget5(target_prop, target_path,
++                                              unspecified, unspecified,
++                                              core.svn_depth_empty,
++                                              None, self.client_ctx)
++    self.assertEqual(props, { target_path : prop_val2 })
++
++    # Using str(unicode) and check if it uses 'utf-8' codecs on Python 3
++    # (or Python 2, only if its default encoding is 'utf-8') 
++    if utils.IS_PY3 or not utils.is_defaultencoding_utf8():
++      # prop_val3 = '(checkmark)UNICODE'
++      prop_val3_str = (u'\u2705\U0001F1FA\U0001F1F3\U0001F1EE'
++                       u'\U0001F1E8\U0001F1F4\U0001F1E9\U0001F1EA')
++      client.propset_local(target_prop, prop_val3_str, [target_path],
++                           core.svn_depth_empty, False, None, self.client_ctx)
++      props, iprops, prop_rev = client.propget5(target_prop, target_path,
++                                                unspecified, unspecified,
++                                              core.svn_depth_empty,
++                                              None, self.client_ctx)
++      self.assertEqual(props, { target_path : prop_val3_str.encode('utf-8') })
++
+   def test_update4(self):
+     """Test update and the notify function callbacks"""
+ 
+diff --git a/subversion/bindings/swig/python/tests/core.py b/subversion/bindings/swig/python/tests/core.py
+index e48d493d1a265..aa3bdc9177981 100644
+--- a/subversion/bindings/swig/python/tests/core.py
++++ b/subversion/bindings/swig/python/tests/core.py
+@@ -177,9 +177,10 @@ def enumerator(section, pool):
+   def test_stream_from_stringbuf(self):
+     stream = svn.core.svn_stream_from_stringbuf(b'')
+     svn.core.svn_stream_close(stream)
+-    with self.assertRaises(TypeError):
+-        stream = svn.core.svn_stream_from_stringbuf(b''.decode())
+-        svn.core.svn_stream_close(stream)
++    stream = svn.core.svn_stream_from_stringbuf(b''.decode())
++    svn.core.svn_stream_close(stream)
++    stream = svn.core.svn_stream_from_stringbuf(None)
++    svn.core.svn_stream_close(stream)
+ 
+   def test_stream_read_full(self):
+     in_str = (b'Python\x00'
+@@ -333,6 +334,20 @@ def test_stream_readline(self):
+                      [b'', 1])
+     svn.core.svn_stream_close(stream)
+ 
++  @unittest.skipUnless(utils.IS_PY3 or utils.is_defaultencoding_utf8(),
++                       "test ony for Python 3 or Python 2 'utf-8' codecs")
++  def test_stream_from_stringbuf_unicode(self):
++    "Check svn_stream_from_stringbuf() handle str on Python 3 correctly."
++    # instr_inicode = '(checkmark)UNICODE'
++    in_str_unicode = (u'\u2705\U0001F1FA\U0001F1F3\U0001F1EE'
++                      u'\U0001F1E8\U0001F1F4\U0001F1E9\U0001F1EA')
++    stream = svn.core.svn_stream_from_stringbuf(in_str_unicode)
++    try:
++      self.assertEqual(svn.core.svn_stream_read_full(stream, 4096),
++                       in_str_unicode.encode('utf-8'))
++    finally:
++      svn.core.svn_stream_close(stream)
++
+ 
+ def suite():
+     return unittest.defaultTestLoader.loadTestsFromTestCase(

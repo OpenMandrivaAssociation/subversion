@@ -1,0 +1,144 @@
+From 33bbc9853714e0a0c8a0c5af1250d4c49179aac8 Mon Sep 17 00:00:00 2001
+From: Jun Omae <jun66j5@apache.org>
+Date: Wed, 23 Oct 2024 10:44:41 +0000
+Subject: [PATCH] Make swig-rb compatible with SWIG 4.3.0.
+
+* subversion/bindings/swig/include/svn_containers.swg
+  (%typemap(out) apr_hash_t *PROPHASH,
+   %typemap(out) apr_hash_t *CHANGED_PATH_HASH,
+   %typemap(out) apr_array_header_t *PROP_LIST,
+   %typemap(out) apr_array_header_t *PROP_LIST_MAY_BE_NULL):
+    Set the return value to `$result` rather than using `%append_output` in
+    `%typemap(out)` for Ruby.
+
+* subversion/bindings/swig/include/svn_types.swg
+  (%typemap(out) svn_error_t *):
+    Initialize `$result` with an empty array for the workaround to
+    `%append_output` incorrectly handling for nil and a list in Ruby.
+
+  (%typemap(ret) svn_error_t *):
+    Use first entry for `$result` when the size of the `$result` list is 1.
+
+* subversion/bindings/swig/ruby/svn/core.rb
+  (Svn::Core::RangeList.diff):
+    Revised because multiple values are correctly retrieved from SWIG methods
+    now.
+
+* subversion/bindings/swig/svn_wc.i
+  (%typemap(ret) svn_error_t *err):
+    Added because `%typemap(out) svn_error_t *err` is defined.
+
+
+git-svn-id: https://svn.apache.org/repos/asf/subversion/trunk@1921506 13f79535-47bb-0310-9956-ffa450edef68
+---
+ .../bindings/swig/include/svn_containers.swg  | 10 ++++------
+ .../bindings/swig/include/svn_types.swg       | 19 +++++++++++++++++--
+ subversion/bindings/swig/ruby/svn/core.rb     |  2 +-
+ subversion/bindings/swig/svn_wc.i             |  2 ++
+ 4 files changed, 24 insertions(+), 9 deletions(-)
+
+diff --git a/subversion/bindings/swig/include/svn_containers.swg b/subversion/bindings/swig/include/svn_containers.swg
+index 47bc50a92bb8b..7dc3b0dbedea1 100644
+--- a/subversion/bindings/swig/include/svn_containers.swg
++++ b/subversion/bindings/swig/include/svn_containers.swg
+@@ -310,7 +310,7 @@
+ 
+ %typemap(out) apr_hash_t *PROPHASH
+ {
+-  %append_output(svn_swig_rb_apr_hash_to_hash_svn_string($1));
++  $result = svn_swig_rb_apr_hash_to_hash_svn_string($1);
+ }
+ #endif
+ 
+@@ -326,10 +326,8 @@
+ #ifdef SWIGRUBY
+ %typemap(out) apr_hash_t *CHANGED_PATH_HASH
+ {
+-  VALUE rb_changed_path_hash;
+-  rb_changed_path_hash =
++  $result =
+     svn_swig_rb_apr_hash_to_hash_swig_type($1, "svn_log_changed_path_t *");
+-  %append_output(rb_changed_path_hash);
+ }
+ 
+ %apply apr_hash_t *CHANGED_PATH_HASH {
+@@ -760,7 +758,7 @@
+ 
+ %typemap(out) apr_array_header_t *PROP_LIST
+ {
+-  %append_output(svn_swig_rb_prop_apr_array_to_hash_prop($1));
++  $result = svn_swig_rb_prop_apr_array_to_hash_prop($1);
+ }
+ 
+ %typemap(in) apr_array_header_t *PROP_LIST_MAY_BE_NULL
+@@ -778,7 +776,7 @@
+ 
+ %typemap(out) apr_array_header_t *PROP_LIST_MAY_BE_NULL
+ {
+-  %append_output($1 ? svn_swig_rb_prop_apr_array_to_hash_prop($1) : Qnil);
++  $result = $1 ? svn_swig_rb_prop_apr_array_to_hash_prop($1) : Qnil;
+ }
+ 
+ %apply apr_array_header_t *PROP_LIST {
+diff --git a/subversion/bindings/swig/include/svn_types.swg b/subversion/bindings/swig/include/svn_types.swg
+index d251e34129f57..07d4c85dec683 100644
+--- a/subversion/bindings/swig/include/svn_types.swg
++++ b/subversion/bindings/swig/include/svn_types.swg
+@@ -532,14 +532,29 @@ svn_ ## TYPE ## _swig_rb_closed(VALUE self)
+ #endif
+ 
+ #ifdef SWIGRUBY
+-%typemap(out) svn_error_t *
++%typemap(out) svn_error_t * (VALUE *svn_presult = NULL)
+ {
+   if ($1) {
+     svn_swig_rb_destroy_pool(_global_svn_swig_rb_pool);
+     svn_swig_rb_pop_pool(_global_svn_swig_rb_pool);
+     svn_swig_rb_handle_svn_error($1);
+   }
+-  $result = Qnil;
++  $result = rb_ary_new();
++  svn_presult = &$result;
++}
++
++%typemap(ret) svn_error_t *
++{
++  if (TYPE(*svn_presult) == T_ARRAY) {
++    switch (rb_array_len(*svn_presult)) {
++      case 0:
++        *svn_presult = Qnil;
++        break;
++      case 1:
++        *svn_presult = rb_ary_entry(*svn_presult, 0);
++        break;
++    }
++  }
+ }
+ #endif
+ 
+diff --git a/subversion/bindings/swig/ruby/svn/core.rb b/subversion/bindings/swig/ruby/svn/core.rb
+index 26e5e84d4fba9..ff32926066cc0 100644
+--- a/subversion/bindings/swig/ruby/svn/core.rb
++++ b/subversion/bindings/swig/ruby/svn/core.rb
+@@ -812,7 +812,7 @@ def initialize(*ranges)
+       def diff(to, consider_inheritance=false)
+         result = Core.rangelist_diff(self, to, consider_inheritance)
+         deleted = result.pop
+-        added = result
++        added = result.pop
+         [added, deleted].collect do |result|
+           self.class.new(*result)
+         end
+diff --git a/subversion/bindings/swig/svn_wc.i b/subversion/bindings/swig/svn_wc.i
+index cee5f7e486727..1d7b461fa008e 100644
+--- a/subversion/bindings/swig/svn_wc.i
++++ b/subversion/bindings/swig/svn_wc.i
+@@ -242,6 +242,8 @@
+ {
+   $result = $1 ? svn_swig_rb_svn_error_to_rb_error($1) : Qnil;
+ }
++
++%typemap(ret) svn_error_t *err "";
+ #endif
+ 
+ 

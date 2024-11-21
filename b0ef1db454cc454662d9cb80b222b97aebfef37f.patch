@@ -1,0 +1,161 @@
+From b0ef1db454cc454662d9cb80b222b97aebfef37f Mon Sep 17 00:00:00 2001
+From: Jun Omae <jun66j5@apache.org>
+Date: Wed, 23 Oct 2024 10:36:30 +0000
+Subject: [PATCH] Make swig-py compatible with SWIG 4.3.0.
+
+* subversion/bindings/swig/include/svn_types.swg
+  (%typemap(out) svn_error_t *):
+    Initialize `$result` with an empty list for the workaround to
+    `%append_output` incorrectly handling for None and a list in Python.
+  (%typemap(ret) svn_error_t *):
+    Use first entry for `$result` when the size of the `$result` list is 1.
+  (%typemap(ret) svn_error_t * SVN_ERR_WITH_ATTRS):
+    Ditto.
+
+* subversion/bindings/swig/python/svn/fs.py
+  (svn_fs_commit_txn):
+    Removed because multiple values are correctly retrieved from SWIG methods
+    now.
+
+* subversion/bindings/swig/python/tests/client.py
+  (test_checkout, test_update4):
+    Check `TypeError` when a NULL pointer passed since SWIG 4.3.0.
+
+* subversion/bindings/swig/python/tests/core.py
+  (test_svn_rangelist_diff):
+    Added tests for the workaround for `%append_output` incorrectly handling.
+
+
+git-svn-id: https://svn.apache.org/repos/asf/subversion/trunk@1921505 13f79535-47bb-0310-9956-ffa450edef68
+---
+ .../bindings/swig/include/svn_types.swg       | 33 +++++++++++++++----
+ subversion/bindings/swig/python/svn/fs.py     | 28 ----------------
+ .../bindings/swig/python/tests/client.py      |  8 +++--
+ subversion/bindings/swig/python/tests/core.py | 29 ++++++++++++++++
+ 4 files changed, 62 insertions(+), 36 deletions(-)
+
+diff --git a/subversion/bindings/swig/include/svn_types.swg b/subversion/bindings/swig/include/svn_types.swg
+index 45b2c0d4468b8..d251e34129f57 100644
+--- a/subversion/bindings/swig/include/svn_types.swg
++++ b/subversion/bindings/swig/include/svn_types.swg
+@@ -435,8 +435,8 @@ svn_ ## TYPE ## _swig_rb_closed(VALUE self)
+             svn_error_clear($1);
+         SWIG_fail;
+     }
+-    Py_INCREF(Py_None);
+-    $result = Py_None;
++    Py_XDECREF($result);
++    $result = PyList_New(0);
+ }
+ 
+ %typemap(out) svn_error_t * SVN_ERR_WITH_ATTRS (apr_status_t apr_err,
+@@ -470,11 +470,31 @@ svn_ ## TYPE ## _swig_rb_closed(VALUE self)
+             SWIG_fail;
+           }
+       }
+-    else
+-      {
+-        Py_INCREF(Py_None);
+-        $result = Py_None;
++    Py_XDECREF($result);
++    $result = PyList_New(0);
++}
++
++%typemap(ret) svn_error_t * {
++    if ($result == NULL) {
++      $result = Py_None;
++      Py_INCREF($result);
++    }
++    else {
++      switch (PyList_Size($result)) {
++        case 0:
++          $result = Py_None;
++          Py_INCREF($result);
++          break;
++        case 1:
++          {
++            PyObject *tmp = $result;
++            $result = PyList_GetItem(tmp, 0);
++            Py_INCREF($result);
++            Py_DECREF(tmp);
++          }
++          break;
+       }
++    }
+ }
+ 
+ %typemap(ret) svn_error_t * SVN_ERR_WITH_ATTRS {
+@@ -486,6 +506,7 @@ svn_ ## TYPE ## _swig_rb_closed(VALUE self)
+         Py_XDECREF($result);
+         SWIG_fail;
+       }
++    $typemap(ret, svn_error_t *);
+ }
+ #endif
+ 
+diff --git a/subversion/bindings/swig/python/tests/client.py b/subversion/bindings/swig/python/tests/client.py
+index 258d9d3bf5982..ced58ce540b54 100644
+--- a/subversion/bindings/swig/python/tests/client.py
++++ b/subversion/bindings/swig/python/tests/client.py
+@@ -172,7 +172,9 @@ def test_checkout(self):
+ 
+     path = self.temper.alloc_empty_dir('-checkout')
+ 
+-    self.assertRaises(ValueError, client.checkout2,
++    # TypeError is raised since SWIG 4.3.0
++    self.assertRaises((ValueError, TypeError), r'Received a NULL pointer',
++                      client.checkout2,
+                       self.repos_uri, path, None, None, True, True,
+                       self.client_ctx)
+ 
+@@ -579,7 +581,9 @@ def test_update4(self):
+ 
+     path = self.temper.alloc_empty_dir('-update')
+ 
+-    self.assertRaises(ValueError, client.checkout2,
++    # TypeError is raised since SWIG 4.3.0
++    self.assertRaises((ValueError, TypeError), r'Received a NULL pointer',
++                      client.checkout2,
+                       self.repos_uri, path, None, None, True, True,
+                       self.client_ctx)
+ 
+diff --git a/subversion/bindings/swig/python/tests/core.py b/subversion/bindings/swig/python/tests/core.py
+index aa3bdc9177981..fd7c543f7a85d 100644
+--- a/subversion/bindings/swig/python/tests/core.py
++++ b/subversion/bindings/swig/python/tests/core.py
+@@ -348,6 +348,35 @@ def test_stream_from_stringbuf_unicode(self):
+     finally:
+       svn.core.svn_stream_close(stream)
+ 
++  def test_svn_rangelist_diff(self):
++    """
++    SWIG incorrectly handles return values when the first %append_output() is
++    invoked with a list instance. svn.core.svn_rangelist_diff() is in the case.
++    We test whether the workaround for it is working.
++    """
++
++    def from_args(start, end, inheritable):
++      instance = svn.core.svn_merge_range_t()
++      instance.start = start
++      instance.end = end
++      instance.inheritable = inheritable
++      return instance
++
++    def to_args(instance):
++      return [instance.start, instance.end, instance.inheritable]
++
++    def map_list(f, iterator):
++      return list(map(f, iterator))
++
++    from_ = [from_args(4, 5, True), from_args(9, 13, True)]
++    to = [from_args(7, 11, True)]
++    rv = svn.core.svn_rangelist_diff(from_, to, True)
++    self.assertIsInstance(rv, (list, tuple))
++    deleted, added = rv
++    self.assertEqual([[7, 9, True]], map_list(to_args, added))
++    self.assertEqual([[4, 5, True], [11, 13, True]],
++                     map_list(to_args, deleted))
++
+ 
+ def suite():
+     return unittest.defaultTestLoader.loadTestsFromTestCase(

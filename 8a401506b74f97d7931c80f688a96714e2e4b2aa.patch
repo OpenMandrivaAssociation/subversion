@@ -1,0 +1,52 @@
+From 8a401506b74f97d7931c80f688a96714e2e4b2aa Mon Sep 17 00:00:00 2001
+From: Yasuhito Futatsuki <futatuki@apache.org>
+Date: Sun, 20 Dec 2020 05:40:35 +0000
+Subject: [PATCH] swig-py: Follow up to r1880967: Fix a comment about the place
+ we raise Python exception 'exc_ob'.
+
+* subversion/bindings/swig/include/svn_types.swg
+  (typemap(out) svn_error_t * SVN_ERR_WITH_ATTRS):
+  - Fix comment after the block checking if exc_ob is NULL.
+    We raise the exception for exc_ob within the callee function block,
+    do not entrust to the caller.
+  - Remove trailing spaces on end of lines.
+
+
+git-svn-id: https://svn.apache.org/repos/asf/subversion/trunk@1884640 13f79535-47bb-0310-9956-ffa450edef68
+---
+ subversion/bindings/swig/include/svn_types.swg | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/subversion/bindings/swig/include/svn_types.swg b/subversion/bindings/swig/include/svn_types.swg
+index 30cd6b5848df6..db0dd7623b678 100644
+--- a/subversion/bindings/swig/include/svn_types.swg
++++ b/subversion/bindings/swig/include/svn_types.swg
+@@ -439,7 +439,7 @@ svn_ ## TYPE ## _swig_rb_closed(VALUE self)
+     $result = Py_None;
+ }
+ 
+-%typemap(out) svn_error_t * SVN_ERR_WITH_ATTRS (apr_status_t apr_err, 
++%typemap(out) svn_error_t * SVN_ERR_WITH_ATTRS (apr_status_t apr_err,
+                                                 PyObject *exc_class,
+                                                 PyObject *exc_ob) {
+     apr_err = 0;
+@@ -451,7 +451,7 @@ svn_ ## TYPE ## _swig_rb_closed(VALUE self)
+           {
+             svn_swig_py_build_svn_exception(&exc_class, &exc_ob, $1);
+             if (exc_ob == NULL)
+-              { 
++              {
+                 /* We couldn't get an exception instance. */
+                 if (exc_class != NULL)
+                   {
+@@ -461,8 +461,8 @@ svn_ ## TYPE ## _swig_rb_closed(VALUE self)
+                   }
+                 SWIG_fail;
+               }
+-            /* We have an exeception instance, but we don't raise it.
+-               Our caller will have to do that. */
++            /* We have an exeception instance, but we don't raise it until
++               typemap(ret) block after typemap(argout) blocks. */
+           }
+         else
+           {

@@ -1,0 +1,336 @@
+From 63cec7d1fbb88abb253035a1f6dac82d439ff42b Mon Sep 17 00:00:00 2001
+From: "C. Michael Pilato" <cmpilato@apache.org>
+Date: Tue, 18 Aug 2020 14:22:55 +0000
+Subject: [PATCH] swig-py: Allow SubversionException to add attributes
+
+A C API function can simultaneously return an error plus additional
+non-error information.  But in Python, returning an error (that is,
+raising an exception) and returning (as a function return value) other
+non-error information are somewhat mutually exclusive.  With this
+patch, we introduce a new set of typemaps to allow the bindings code
+to attach any non-error information returned from an errorful C API
+function as attributes to the raised exception so that callers can
+access everything the C API returned.
+
+[in subversion/bindings/swig/]
+
+* include/svn_types.swg
+  (typemap(out) svn_error_t * SVN_ERR_WITH_ATTRS,
+   typemap(ret) svn_error_t * SVN_ERR_WITH_ATTRS):
+    New typemaps to all wrapper functions to use the attributes-on-
+    exception-objects feature.  With these typemaps, the argout
+    typemaps can use the status code of the subversion error 'apr_err'
+    and the exception instance object 'exc_ob'.
+
+* python/libsvn_swig_py/swigutil_py.h, python/libsvn_swig_py/swigutil_py.c
+  (svn_swig_py_build_svn_exception): New function, abstracted from...
+  (svn_swig_py_svn_exception): ...this, which now uses
+    svn_swig_py_build_svn_exception() to build the exception.
+
+* svn_fs.i
+  (typemap(argout) (const char **conflict_p, svn_revnum_t *new_rev)):
+    Removed.  This reverts the behavor that svn.fs.commit_txn()
+    always returns a 2-tuple of which the first item is always None.
+  (typemap(argout) (const char **conflict_p)):
+    New custom typemap to add the conflict path as an attibute to the
+    exception instance.  This applies to svn_fs_merge(),
+    svn_fs_commit_txn() and svn_repos_fs_commit_txn().
+  (typemap(argout) (svn_revnum_t *new_rev)):
+    New custom typemap to add the created revision as an attibute to
+    the exception instance.  This applies to svn_fs_commit_txn() and
+    svn_repos_fs_commit_txn().
+  (): Apply the 'SVN_ERR_WITH_ATTRS' typemap to svn_fs_merge()
+    and svn_fs_commit_txn().
+
+* svn_repos.i
+  (): Apply the 'SVN_ERR_WITH_ATTRS' typemap to svn_repos_fs_merge().
+
+Patch by: Yasuhito FUTATSUKI <futatuki at yf.bsdclub.org>
+          (Tweaked by me.)
+
+
+git-svn-id: https://svn.apache.org/repos/asf/subversion/trunk@1880967 13f79535-47bb-0310-9956-ffa450edef68
+---
+ .../bindings/swig/include/svn_types.swg       | 49 +++++++++++++
+ .../swig/python/libsvn_swig_py/swigutil_py.c  | 49 +++++++++----
+ .../swig/python/libsvn_swig_py/swigutil_py.h  | 11 ++-
+ subversion/bindings/swig/svn_fs.i             | 73 +++++++++++++++----
+ subversion/bindings/swig/svn_repos.i          | 10 +++
+ 5 files changed, 162 insertions(+), 30 deletions(-)
+
+diff --git a/subversion/bindings/swig/include/svn_types.swg b/subversion/bindings/swig/include/svn_types.swg
+index 7c933b1ac7a75..30cd6b5848df6 100644
+--- a/subversion/bindings/swig/include/svn_types.swg
++++ b/subversion/bindings/swig/include/svn_types.swg
+@@ -438,6 +438,55 @@ svn_ ## TYPE ## _swig_rb_closed(VALUE self)
+     Py_INCREF(Py_None);
+     $result = Py_None;
+ }
++
++%typemap(out) svn_error_t * SVN_ERR_WITH_ATTRS (apr_status_t apr_err, 
++                                                PyObject *exc_class,
++                                                PyObject *exc_ob) {
++    apr_err = 0;
++    exc_class = exc_ob = NULL;
++    if ($1 != NULL)
++      {
++        apr_err = $1->apr_err;
++        if (apr_err != SVN_ERR_SWIG_PY_EXCEPTION_SET)
++          {
++            svn_swig_py_build_svn_exception(&exc_class, &exc_ob, $1);
++            if (exc_ob == NULL)
++              { 
++                /* We couldn't get an exception instance. */
++                if (exc_class != NULL)
++                  {
++                    /* Raise an exception without instance ... */
++                    PyErr_SetNone(exc_class);
++                    Py_DECREF(exc_class);
++                  }
++                SWIG_fail;
++              }
++            /* We have an exeception instance, but we don't raise it.
++               Our caller will have to do that. */
++          }
++        else
++          {
++            svn_error_clear($1);
++            SWIG_fail;
++          }
++      }
++    else
++      {
++        Py_INCREF(Py_None);
++        $result = Py_None;
++      }
++}
++
++%typemap(ret) svn_error_t * SVN_ERR_WITH_ATTRS {
++    if (exc_ob != NULL)
++      {
++        PyErr_SetObject(exc_class, exc_ob);
++        Py_DECREF(exc_class);
++        Py_DECREF(exc_ob);
++        Py_XDECREF($result);
++        SWIG_fail;
++      }
++}
+ #endif
+ 
+ #ifdef SWIGPERL
+diff --git a/subversion/bindings/swig/python/libsvn_swig_py/swigutil_py.c b/subversion/bindings/swig/python/libsvn_swig_py/swigutil_py.c
+index 7f2cfd8841916..54629bc1f5c29 100644
+--- a/subversion/bindings/swig/python/libsvn_swig_py/swigutil_py.c
++++ b/subversion/bindings/swig/python/libsvn_swig_py/swigutil_py.c
+@@ -411,10 +411,12 @@ void *svn_swig_py_must_get_ptr(void *input, swig_type_info *type, int argnum)
+ 
+ /*** Custom SubversionException stuffs. ***/
+ 
+-void svn_swig_py_svn_exception(svn_error_t *error_chain)
++void svn_swig_py_build_svn_exception(PyObject **exc_class,
++                                     PyObject **exc_ob,
++                                     svn_error_t *error_chain)
+ {
+   PyObject *args_list, *args, *apr_err_ob, *message_ob, *file_ob, *line_ob;
+-  PyObject *svn_module, *exc_class, *exc_ob;
++  PyObject *svn_module;
+   svn_error_t *err;
+ 
+   if (error_chain == NULL)
+@@ -422,7 +424,7 @@ void svn_swig_py_svn_exception(svn_error_t *error_chain)
+ 
+   /* Start with no references. */
+   args_list = args = apr_err_ob = message_ob = file_ob = line_ob = NULL;
+-  svn_module = exc_class = exc_ob = NULL;
++  svn_module = *exc_class = *exc_ob = NULL;
+ 
+   if ((args_list = PyList_New(0)) == NULL)
+     goto finished;
+@@ -481,15 +483,12 @@ void svn_swig_py_svn_exception(svn_error_t *error_chain)
+   /* Create the exception object chain. */
+   if ((svn_module = PyImport_ImportModule((char *)"svn.core")) == NULL)
+     goto finished;
+-  if ((exc_class = PyObject_GetAttrString(svn_module,
+-                                       (char *)"SubversionException")) == NULL)
+-    goto finished;
+-  if ((exc_ob = PyObject_CallMethod(exc_class, (char *)"_new_from_err_list",
+-                                    (char *)"O", args_list)) == NULL)
+-    goto finished;
+-
+-  /* Raise the exception. */
+-  PyErr_SetObject(exc_class, exc_ob);
++  if ((*exc_class = PyObject_GetAttrString(svn_module,
++                                       (char *)"SubversionException")) != NULL)
++    {
++      *exc_ob = PyObject_CallMethod(*exc_class, (char *)"_new_from_err_list",
++                                    (char *)"O", args_list);
++    }
+ 
+  finished:
+   /* Release any references. */
+@@ -500,8 +499,30 @@ void svn_swig_py_svn_exception(svn_error_t *error_chain)
+   Py_XDECREF(file_ob);
+   Py_XDECREF(line_ob);
+   Py_XDECREF(svn_module);
+-  Py_XDECREF(exc_class);
+-  Py_XDECREF(exc_ob);
++}
++
++void svn_swig_py_svn_exception(svn_error_t *error_chain)
++{
++  PyObject *exc_class, *exc_ob;
++
++  /* First, we create the exception... */
++  svn_swig_py_build_svn_exception(&exc_class, &exc_ob, error_chain);
++  
++  /* ...then, we raise it.  If got only an exception class but no
++     instance, we'll raise the class without an instance. */
++  if (exc_class != NULL)
++    {
++      if (exc_ob != NULL)
++        {
++          PyErr_SetObject(exc_class, exc_ob);
++          Py_DECREF(exc_ob);
++        }
++      else 
++        {
++          PyErr_SetNone(exc_class);
++        }
++      Py_DECREF(exc_class);
++    }
+ }
+ 
+ 
+diff --git a/subversion/bindings/swig/python/libsvn_swig_py/swigutil_py.h b/subversion/bindings/swig/python/libsvn_swig_py/swigutil_py.h
+index 7650cec0171e8..2998adf13a0e9 100644
+--- a/subversion/bindings/swig/python/libsvn_swig_py/swigutil_py.h
++++ b/subversion/bindings/swig/python/libsvn_swig_py/swigutil_py.h
+@@ -98,11 +98,18 @@ int svn_swig_py_convert_ptr(PyObject *input, void **obj, swig_type_info *type);
+ 
+ /* Wrapper for SWIG_MustGetPtr */
+ void *svn_swig_py_must_get_ptr(void *input, swig_type_info *type, int argnum);
++
+ 
+ /*** Functions to expose a custom SubversionException ***/
+ 
+-/* raise a subversion exception, created from a normal subversion
+-   error.  consume the error.  */
++/* Get a SubversionException class object and its instance built from
++   error_chain, but do not raise it immediately.  Consume the
++   error_chain.  */
++void svn_swig_py_build_svn_exception(
++    PyObject **exc_class, PyObject **exc_ob, svn_error_t *error_chain);
++
++/* Raise a SubversionException, created from a normal subversion
++   error.  Consume the error.  */
+ void svn_swig_py_svn_exception(svn_error_t *err);
+ 
+ 
+diff --git a/subversion/bindings/swig/svn_fs.i b/subversion/bindings/swig/svn_fs.i
+index ae1d847b88199..6fda830783270 100644
+--- a/subversion/bindings/swig/svn_fs.i
++++ b/subversion/bindings/swig/svn_fs.i
+@@ -93,23 +93,68 @@
+ %apply apr_hash_t *MERGEINFO { apr_hash_t *mergeinhash };
+ 
+ /* -----------------------------------------------------------------------
+-   Fix the return value for svn_fs_commit_txn(). If the conflict result is
+-   NULL, then %append_output() is passed Py_None, but that goofs up
+-   because that is *also* the marker for "I haven't started assembling a
+-   multi-valued return yet" which means the second return value (new_rev)
+-   will not cause a 2-tuple to be manufactured.
+-
+-   The answer is to explicitly create a 2-tuple return value.
+-
+-   FIXME: Do the Perl and Ruby bindings need to do something similar?
++   Tweak a SubversionException instance when it is raised in
++   svn_fs_merge(), svn_fs_commit_txn() and svn_repos_fs_commit_txn().
++   Those APIs return conflicts (and revision number on svn_fs_commit_txn
++   and svn_repos_fs_commit_txn) related to the conflict error when it  
++   is occured.  As Python wrapper functions report errors by raising
++   exceptions and don't return values, we use attributes of the exception 
++   to pass these values to the caller.
+ */
++
+ #ifdef SWIGPYTHON
+-%typemap(argout) (const char **conflict_p, svn_revnum_t *new_rev) {
+-    /* this is always Py_None */
+-    Py_DECREF($result);
+-    /* build the result tuple */
+-    $result = Py_BuildValue("zi", *$1, (long)*$2);
++%typemap(argout) (const char **conflict_p) (PyObject* conflict_ob) {
++    if (*$1 == NULL)
++      {
++        Py_INCREF(Py_None);
++        conflict_ob = Py_None;
++      }
++    else
++      {
++        /* Note: We can check if apr_err == SVN_ERR_FS_CONFLICT or not
++           before access to *$1 */
++        conflict_ob = PyBytes_FromString((const char *)*$1);
++        if (conflict_ob == NULL)
++          {
++            Py_XDECREF(exc_ob);
++            Py_XDECREF($result);
++            SWIG_fail;
++          }
++      }
++    if (exc_ob != NULL)
++      {
++        PyObject_SetAttrString(exc_ob, "$1_name", conflict_ob); 
++        Py_DECREF(conflict_ob);
++      }
++    else
++      {
++        %append_output(conflict_ob);
++      }
+ }
++
++%typemap(argout) svn_revnum_t *new_rev (PyObject *rev_ob) {
++    rev_ob = PyInt_FromLong((long)*$1);
++    if (rev_ob == NULL)
++      {
++        Py_XDECREF(exc_ob);
++        Py_XDECREF($result);
++        SWIG_fail;
++      }
++    if (exc_ob != NULL)
++      {
++        PyObject_SetAttrString(exc_ob, "$1_name", rev_ob); 
++        Py_DECREF(rev_ob);
++      }
++    else
++      {
++        %append_output(rev_ob);
++      }
++}
++
++%apply svn_error_t *SVN_ERR_WITH_ATTRS  {
++    svn_error_t * svn_fs_commit_txn,
++    svn_error_t * svn_fs_merge
++};
+ #endif
+ 
+ /* Ruby fixups for functions not following the pool convention. */
+diff --git a/subversion/bindings/swig/svn_repos.i b/subversion/bindings/swig/svn_repos.i
+index bab95c859bdc0..2c4532f861df9 100644
+--- a/subversion/bindings/swig/svn_repos.i
++++ b/subversion/bindings/swig/svn_repos.i
+@@ -108,6 +108,16 @@
+                   svn_swig_rb_repos_authz_callback)
+ #endif
+ 
++/* -----------------------------------------------------------------------
++   Tweak a SubversionException instance (See svn_fs.i for detail).
++*/
++
++#ifdef SWIGPYTHON
++%apply svn_error_t *SVN_ERR_WITH_ATTRS  {
++    svn_error_t * svn_repos_fs_commit_txn
++};
++#endif
++
+ /* -----------------------------------------------------------------------
+    handle svn_repos_get_committed_info().
+ */

@@ -1,0 +1,29 @@
+From f48531e0df4a3f7aec2b5548fd8b19826c82e929 Mon Sep 17 00:00:00 2001
+From: Jun Omae <jun66j5@apache.org>
+Date: Sat, 12 Oct 2024 02:43:14 +0000
+Subject: [PATCH] swig-rb: Fix warnings on printf-format for the size_t
+ argument.
+
+* subversion/bindings/swig/include/svn_types.swg
+  (%typemap(in) const unsigned char digest[]): Use PRIuSIZE printf-format
+  for RSTRING_LEN(x).
+
+
+git-svn-id: https://svn.apache.org/repos/asf/subversion/trunk@1921264 13f79535-47bb-0310-9956-ffa450edef68
+---
+ subversion/bindings/swig/include/svn_types.swg | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/subversion/bindings/swig/include/svn_types.swg b/subversion/bindings/swig/include/svn_types.swg
+index c0097f056af5b..45b2c0d4468b8 100644
+--- a/subversion/bindings/swig/include/svn_types.swg
++++ b/subversion/bindings/swig/include/svn_types.swg
+@@ -1262,7 +1262,7 @@ svn_ ## TYPE ## _swig_rb_closed(VALUE self)
+   if (NIL_P($input)) {
+     $1 = NULL;
+   } else if (RSTRING_LEN($input) != APR_MD5_DIGESTSIZE) {
+-    rb_raise(rb_eArgError, "digest size (%d) must be %d",
++    rb_raise(rb_eArgError, "digest size (%" PRIuSIZE ") must be %d",
+              RSTRING_LEN($input), APR_MD5_DIGESTSIZE);
+   } else {
+     $1 = ($1_ltype)StringValuePtr($input);
