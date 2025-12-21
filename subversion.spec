@@ -52,6 +52,11 @@ Source8:	svnserve.service
 Source9:	svnserve-tmpfiles.conf
 Source10:	subversion.sysusers
 
+BuildRequires:	autoconf
+BuildRequires:	automake
+BuildRequires:	libtool-base
+BuildRequires:	slibtool
+BuildRequires:	make
 BuildRequires:	boost-devel
 BuildRequires:	gettext
 BuildRequires:	chrpath
@@ -531,10 +536,6 @@ export svn_cv_ruby_link="%{__cc} -shared"
 export svn_cv_ruby_sitedir_libsuffix=""
 export svn_cv_ruby_sitedir_archsuffix=""
 %endif
-
-# FIXME using clang triggers a freeze during "make install"
-export CC=gcc
-export CXX=g++
 
 %configure \
 	--localstatedir=/var/lib \
