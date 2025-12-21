@@ -30,7 +30,7 @@
 
 Summary:	A Concurrent Versioning System
 Name:		subversion
-Version:	1.14.4
+Version:	1.14.5
 %if "%{beta}" != ""
 Release:	0.%{beta}.1
 Source0:	http://www.apache.org/dist/subversion/%{name}-%{version}-%{beta}.tar.bz2
@@ -87,12 +87,6 @@ Provides:	svn = %{EVRD}
 %patchlist
 subversion-1.10.0-linkage.patch
 subversion-1.14.2-db18.patch
-https://github.com/apache/subversion/commit/63cec7d1fbb88abb253035a1f6dac82d439ff42b.patch
-https://github.com/apache/subversion/commit/8a401506b74f97d7931c80f688a96714e2e4b2aa.patch
-https://github.com/apache/subversion/commit/ba3f151bb627cbd86fce6a887b34d6a67ebaf8a4.patch
-https://github.com/apache/subversion/commit/f48531e0df4a3f7aec2b5548fd8b19826c82e929.patch
-https://github.com/apache/subversion/commit/b0ef1db454cc454662d9cb80b222b97aebfef37f.patch
-https://github.com/apache/subversion/commit/33bbc9853714e0a0c8a0c5af1250d4c49179aac8.patch
 
 %description
 Subversion (SVN) is a concurrent version control system which enables one or
