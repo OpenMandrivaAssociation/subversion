@@ -1,0 +1,57 @@
+diff --git a/Makefile.in b/Makefile.in
+index 7f0a37d..2ec6928 100644
+--- a/Makefile.in
++++ b/Makefile.in
+@@ -141,7 +141,10 @@ INCLUDES = -I$(top_srcdir)/subversion/include -I$(top_builddir)/subversion \
+            @SVN_UTF8PROC_INCLUDES@
+ 
+ APACHE_INCLUDES = @APACHE_INCLUDES@
+-APACHE_LIBEXECDIR = $(DESTDIR)@APACHE_LIBEXECDIR@
++# Final module dir (no DESTDIR) — used for -rpath at link time.
++apache_libexecdir = @APACHE_LIBEXECDIR@
++# Staged install path for apxs; must include DESTDIR.
++APACHE_LIBEXECDIR = $(DESTDIR)$(apache_libexecdir)
+ APACHE_LDFLAGS = @APACHE_LDFLAGS@
+ 
+ BOOST_TEST_CPPFLAGS = @BOOST_CPPFLAGS@ -DBOOST_TEST_DYN_LINK -DBOOST_TEST_NO_MAIN
+@@ -279,7 +282,7 @@ LINK_CXX_LIB = $(LINK_CXX) $(LT_SO_VERSION)
+ LINK_SVNXX_TEST = $(LINK_CXX) $(BOOST_TEST_LDFLAGS)
+ 
+ # special link rule for mod_dav_svn
+-LINK_APACHE_MOD = $(LIBTOOL) $(LTFLAGS) --mode=link $(CC) $(LT_LDFLAGS) $(CFLAGS) $(LDFLAGS) -rpath $(APACHE_LIBEXECDIR) -avoid-version -module $(APACHE_LDFLAGS) -shared
++LINK_APACHE_MOD = $(LIBTOOL) $(LTFLAGS) --mode=link $(CC) $(LT_LDFLAGS) $(CFLAGS) $(LDFLAGS) -rpath $(apache_libexecdir) -avoid-version -module $(APACHE_LDFLAGS) -shared
+ 
+ # Special LDFLAGS for some libraries
+ libsvn_client_LDFLAGS = @libsvn_client_LDFLAGS@
+diff --git a/configure.ac b/configure.ac
+index 01ba5e3..f0ecf78 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -236,7 +236,26 @@ if test "$experimental_libtool" = "yes"; then
+   SVN_LIBTOOL="$sh_libtool"
+ else
+   sh_libtool="$abs_builddir/libtool"
+-  SVN_LIBTOOL="\$(SHELL) \"$sh_libtool\""
++  dnl With slibtoolize, the generated ./libtool file is configuration only
++  dnl (ltmain.sh is a no-op stub). The real implementation is rclibtool or
++  dnl slibtool, which read that config file. Invoking $(SHELL) ./libtool
++  dnl then silently succeeds without building anything, so DESTDIR installs
++  dnl that relink (e.g. mod_dontdothat via install-tools) fail looking for a
++  dnl non-existent .a. Prefer rclibtool (compatible libtool-cl mode).
++  if test -n "$ltmain" && grep -q 'this script should never be invoked' "$ltmain" 2>/dev/null; then
++    AC_MSG_NOTICE([slibtool detected; using rclibtool/slibtool as SVN_LIBTOOL])
++    if test -n "$SLIBTOOL"; then
++      SVN_LIBTOOL="$SLIBTOOL"
++    elif rclibtool --version >/dev/null 2>&1; then
++      SVN_LIBTOOL="rclibtool"
++    elif slibtool --version >/dev/null 2>&1; then
++      SVN_LIBTOOL="slibtool"
++    else
++      AC_MSG_ERROR([slibtoolize was used but neither rclibtool nor slibtool is available])
++    fi
++  else
++    SVN_LIBTOOL="\$(SHELL) \"$sh_libtool\""
++  fi
+ fi
+ AC_SUBST(SVN_LIBTOOL)
+ 

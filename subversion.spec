@@ -54,7 +54,6 @@ Source10:	subversion.sysusers
 
 BuildRequires:	autoconf
 BuildRequires:	automake
-BuildRequires:	libtool-base
 BuildRequires:	slibtool
 BuildRequires:	make
 BuildRequires:	boost-devel
@@ -62,7 +61,6 @@ BuildRequires:	gettext
 BuildRequires:	chrpath
 BuildRequires:	docbook-style-xsl
 BuildRequires:	doxygen
-BuildRequires:	libtool
 BuildRequires:	texinfo
 BuildRequires:	db-devel >= 18.1
 BuildRequires:	apache-devel >= %{apache_version}
@@ -92,6 +90,7 @@ Provides:	svn = %{EVRD}
 %patchlist
 subversion-1.10.0-linkage.patch
 subversion-1.14.2-db18.patch
+subversion-slibtool.patch
 
 %description
 Subversion (SVN) is a concurrent version control system which enables one or
@@ -511,9 +510,7 @@ chmod 644 BUGS CHANGES COMMITTERS LICENSE INSTALL README
 # move latest svnbook snapshot as their target version
 mv svn-book-html-chunk svnbook-1.8
 
-# This PATH order makes the fugly test for libtoolize work...
-#PATH=/usr/bin:$PATH ./autogen.sh --release
-libtoolize --force
+slibtoolize --force
 aclocal -I build/ac-macros
 autoconf
 
@@ -640,17 +637,17 @@ make LC_ALL=C LANG=C LD_LIBRARY_PATH="`pwd`/subversion/bindings/swig/perl/libsvn
 %endif
 
 %install
-%makeinstall_std
+%make_install
 
 %if %{with python}
-%makeinstall_std install-swig-py swig_pydir=%{py_platsitedir}/libsvn swig_pydir_extra=%{py_sitedir}/svn
+%make_install install-swig-py swig_pydir=%{py_platsitedir}/libsvn swig_pydir_extra=%{py_sitedir}/svn
 # Precompile python
 %py_compile %{buildroot}/%{py_platsitedir}/libsvn
 %py_compile %{buildroot}/%{py_sitedir}/svn
 %endif
 
 %if %{with perl}
-%makeinstall_std install-swig-pl-lib
+%make_install install-swig-pl-lib
 pushd subversion/bindings/swig/perl/native/
         perl Makefile.PL SITEARCHEXP=%{_datadir}/perl5/vendor_perl INSTALLSITEARCH=%{_datadir}/perl5/vendor_perl
         %makeinstall_std
@@ -658,10 +655,10 @@ popd
 %endif
 
 %if %{with ruby}
-%makeinstall_std install-swig-rb
+%make_install install-swig-rb
 %endif
 %if %{with java}
-%makeinstall_std install-javahl
+%make_install install-javahl
 
 mkdir -p %{buildroot}%{_javadir}
 mv %{buildroot}%{_libdir}/svn-javahl/svn-javahl.jar %{buildroot}%{_javadir}/svn-javahl-%{version}.jar
