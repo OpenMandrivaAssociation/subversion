@@ -32,11 +32,11 @@ Summary:	A Concurrent Versioning System
 Name:		subversion
 Version:	1.14.5
 %if "%{beta}" != ""
-Release:1.%{beta}.1
+Release:0.%{beta}.1
 Source0:	http://www.apache.org/dist/subversion/%{name}-%{version}-%{beta}.tar.bz2
 Source1:	http://www.apache.org/dist/subversion/%{name}-%{version}-%{beta}.tar.bz2.asc
 %else
-Release:2
+Release:3
 Source0:	http://www.apache.org/dist/subversion/%{name}-%{version}.tar.bz2
 Source1:	http://www.apache.org/dist/subversion/%{name}-%{version}.tar.bz2.asc
 %endif
@@ -511,6 +511,7 @@ chmod 644 BUGS CHANGES COMMITTERS LICENSE INSTALL README
 mv svn-book-html-chunk svnbook-1.8
 
 slibtoolize --force
+sed -i -e "s/AC_PROG_LIBTOOL/LT_INIT/g" -e "s/AM_PROG_LIBTOOL/LT_INIT/g" configure.ac 2>/dev/null || true
 aclocal -I build/ac-macros
 autoconf
 
