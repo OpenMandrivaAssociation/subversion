@@ -36,7 +36,7 @@ Release:0.%{beta}.1
 Source0:	http://www.apache.org/dist/subversion/%{name}-%{version}-%{beta}.tar.bz2
 Source1:	http://www.apache.org/dist/subversion/%{name}-%{version}-%{beta}.tar.bz2.asc
 %else
-Release:5
+Release:6
 Source0:	http://www.apache.org/dist/subversion/%{name}-%{version}.tar.bz2
 Source1:	http://www.apache.org/dist/subversion/%{name}-%{version}.tar.bz2.asc
 %endif
@@ -576,6 +576,11 @@ export svn_cv_ruby_sitedir_archsuffix=""
 	--with-serf=%{_prefix} \
 	--with-sqlite=%{_prefix} \
 	--enable-bdb6
+
+# make(1) invokes ./libtool; ensure it exists (slibtool/libtoolize race)
+if [ ! -x ./libtool ]; then
+  ln -sf "$(command -v libtool)" ./libtool 2>/dev/null || ln -sf "$(command -v slibtool)" ./libtool
+fi
 
 %if %{with ruby}
 # fix weird broken autopoo
