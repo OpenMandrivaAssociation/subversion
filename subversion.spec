@@ -36,7 +36,7 @@ Release:0.%{beta}.1
 Source0:	http://www.apache.org/dist/subversion/%{name}-%{version}-%{beta}.tar.bz2
 Source1:	http://www.apache.org/dist/subversion/%{name}-%{version}-%{beta}.tar.bz2.asc
 %else
-Release:6
+Release:7
 Source0:	http://www.apache.org/dist/subversion/%{name}-%{version}.tar.bz2
 Source1:	http://www.apache.org/dist/subversion/%{name}-%{version}.tar.bz2.asc
 %endif
@@ -577,10 +577,17 @@ export svn_cv_ruby_sitedir_archsuffix=""
 	--with-sqlite=%{_prefix} \
 	--enable-bdb6
 
-# make(1) invokes ./libtool; ensure it exists (slibtool/libtoolize race)
-if [ ! -x ./libtool ]; then
-  ln -sf "$(command -v libtool)" ./libtool 2>/dev/null || ln -sf "$(command -v slibtool)" ./libtool
+# make runs "sh ./libtool"; need a shell script, not a binary symlink to slibtool
+rm -f ./libtool
+cat > ./libtool <<'LTEOF'
+#!/bin/sh
+# prefer real GNU libtool script if available
+if [ -x /usr/bin/libtool ] && head -1 /usr/bin/libtool | grep -q '^#!'; then
+  exec /usr/bin/libtool "$@"
 fi
+exec slibtool "$@"
+LTEOF
+chmod +x ./libtool
 
 %if %{with ruby}
 # fix weird broken autopoo
