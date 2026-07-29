@@ -18,7 +18,7 @@
 %define _exclude_files_from_autoreq ^%{_libdir}/libsvnjavahl-%{svnjavahl_api}.so$
 
 %bcond_without  python
-%bcond_without ruby
+%bcond_with  ruby
 %bcond_without  perl
 %bcond_without  gnome_keyring
 %bcond_with  kwallet
@@ -36,7 +36,7 @@ Release:0.%{beta}.1
 Source0:	http://www.apache.org/dist/subversion/%{name}-%{version}-%{beta}.tar.bz2
 Source1:	http://www.apache.org/dist/subversion/%{name}-%{version}-%{beta}.tar.bz2.asc
 %else
-Release:4
+Release:5
 Source0:	http://www.apache.org/dist/subversion/%{name}-%{version}.tar.bz2
 Source1:	http://www.apache.org/dist/subversion/%{name}-%{version}.tar.bz2.asc
 %endif
