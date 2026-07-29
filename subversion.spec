@@ -18,7 +18,7 @@
 %define _exclude_files_from_autoreq ^%{_libdir}/libsvnjavahl-%{svnjavahl_api}.so$
 
 %bcond_without  python
-%bcond_with  ruby
+%bcond_without ruby
 %bcond_without  perl
 %bcond_without  gnome_keyring
 %bcond_with  kwallet
@@ -36,7 +36,7 @@ Release:0.%{beta}.1
 Source0:	http://www.apache.org/dist/subversion/%{name}-%{version}-%{beta}.tar.bz2
 Source1:	http://www.apache.org/dist/subversion/%{name}-%{version}-%{beta}.tar.bz2.asc
 %else
-Release:3
+Release:4
 Source0:	http://www.apache.org/dist/subversion/%{name}-%{version}.tar.bz2
 Source1:	http://www.apache.org/dist/subversion/%{name}-%{version}.tar.bz2.asc
 %endif
@@ -511,6 +511,7 @@ chmod 644 BUGS CHANGES COMMITTERS LICENSE INSTALL README
 mv svn-book-html-chunk svnbook-1.8
 
 slibtoolize --force
+libtoolize --force --copy 2>/dev/null || true
 sed -i -e "s/AC_PROG_LIBTOOL/LT_INIT/g" -e "s/AM_PROG_LIBTOOL/LT_INIT/g" configure.ac 2>/dev/null || true
 aclocal -I build/ac-macros
 autoconf
