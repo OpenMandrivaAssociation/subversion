@@ -1,3 +1,4 @@
 sources:
   svn-book-html-chunk.tar.bz2: 3b3b3dbcc08ed129978ee4ed3aa9536858da1cc2
-  subversion-1.14.5.tar.bz2: 5350ef7ea238b5fff21f822dc9dbeed6e0e426c2
+  subversion-1.15.0.tar.bz2: 818c381aebd6821a8e06e868ff63a19f745cf335
+  subversion-1.15.0.tar.bz2.asc: c7d002e71b63d3b3100c3fa7f8f34782178a5b9b
