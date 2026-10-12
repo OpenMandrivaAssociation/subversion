@@ -32,7 +32,7 @@ Summary:	A Concurrent Versioning System
 Name:		subversion
 Version:	1.15.0
 %if "%{beta}" != ""
-Release:0.%{beta}.1
+Release:0.%{beta}.2
 Source0:	http://www.apache.org/dist/subversion/%{name}-%{version}-%{beta}.tar.bz2
 Source1:	http://www.apache.org/dist/subversion/%{name}-%{version}-%{beta}.tar.bz2.asc
 %else
